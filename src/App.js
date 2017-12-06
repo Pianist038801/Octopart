@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
 import FontAwesome from 'react-fontawesome';
 import logo from './logo.svg';
-//import './App.css';
-// import 'bootstrap/dist/css/bootstrap.css';
+import Dropzone from 'react-dropzone';
+
 class App extends Component {
 	render() {
 		return (
-			<section className="content bom-tool manage">
+			<section className="content bom-tool manage" style={{ marginTop: '-60px' }}>
 				<div className="inner">
 					<h1>
 						<i className="fa fa-list-ul" aria-hidden="true" /> BOM Tool
@@ -35,6 +35,17 @@ class App extends Component {
 							<div className="col-sm-7">
 								<div className="upload">
 									<div className="bom-dropzone">
+										<Dropzone
+											ref={(node) => {}}
+											onDrop={(accepted, rejected) => {
+												alert(accepted);
+											}}
+										>
+											<div className="droptext">
+												<span>Drag a BOM file here </span>
+												<span className="accepts">(.ods, Excel, .csv, .txt, Eagle 6 .sch)</span>
+											</div>
+										</Dropzone>
 										<div className="dropzone">
 											<div className="droptext">
 												<span>Drag a BOM file here </span>
