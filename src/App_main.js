@@ -23,7 +23,15 @@ class App extends Component {
 			data.push(temp);
 		}
 		this.getDataFromServer(data);
-		this.state = { field: props.location.state.data[0], open: false, data: [], id: 1, propertyName: 'part no' };
+		this.state = {
+			field: props.location.state.data[0],
+			title: props.location.state.data[0],
+			open: false,
+			data: [],
+			id: 1,
+			done: false,
+			propertyName: 'part no'
+		};
 	}
 	componentDidMount() {}
 	async getDataFromServer(data) {
@@ -39,7 +47,7 @@ class App extends Component {
 		this.setState({ open: true });
 	};
 	done = () => {
-		this.setState({ open: false, id: 6 });
+		this.setState({ open: false, done: true });
 	};
 	reset = () => {
 		this.setState({ open: false, id: 1 });
@@ -55,114 +63,37 @@ class App extends Component {
 		this.setState({ open: true });
 	};
 	onChange = (propertyName) => {
-		this.setState({ propertyName });
+		var _title = this.state.title.slice(0);
+		_title[this.state.id - 1] = propertyName;
+		this.setState({
+			propertyName: propertyName,
+			title: _title
+		});
 		return;
 	};
 
 	getVal = (str, strSel, ind) => {
+		if (this.state.done && ind == 2 && this.state.id == 1) return '1';
 		if (this.state.id == ind) return strSel;
 		if (this.state.id > ind) return str;
 		return '';
 	};
 	getBorder = (num) => {
+		if (this.state.done) return 'grey';
 		if (this.state.id == num) return 'red';
 		if (this.state.id < num) return 'white';
 		return 'grey';
 	};
+	_remove = (ind) => {
+		var v = this.state.data.slice(0);
+		v.splice(ind, 1);
+		this.setState({ data: v });
+	};
 	render() {
-		// const actions = [
-		// 	<FlatButton label="Re-set columns" primary={true} onClick={this.reset} />,
-		// 	<FlatButton label="Done importing" primary={true} onClick={this.done} />
-		// ];
-
-		// for (let i = 0; i < this.state.data.length; i++) {
-		// 	children.push(
-		// 		<Card>
-		// 			<Card.Content>
-		// 				<Card.Header>
-		// 					Part_No: {' '}
-		// 					<input
-		// 						type="text"
-		// 						value={this.getVal(
-		// 							this.state.data[i]['part no'],
-		// 							this.state.data[i][this.state.propertyName],
-		// 							1
-		// 						)}
-		// 						name="name"
-		// 						style={{ borderWidth: 1, borderColor: this.getBorder(1) }}
-		// 					/>{' '}
-		// 					Qty:
-		// 					<input
-		// 						type="text"
-		// 						value={this.getVal(
-		// 							this.state.data[i]['qty'],
-		// 							this.state.data[i][this.state.propertyName],
-		// 							2
-		// 						)}
-		// 						style={{ borderWidth: 1, borderColor: this.getBorder(2) }}
-		// 						name="name"
-		// 					/>
-		// 					Manufacturer:
-		// 					<input
-		// 						type="text"
-		// 						value={this.getVal(
-		// 							this.state.data[i]['Manufacturer'],
-		// 							this.state.data[i][this.state.propertyName],
-		// 							3
-		// 						)}
-		// 						style={{ borderWidth: 1, borderColor: this.getBorder(3) }}
-		// 						name="name"
-		// 					/>
-		// 					{'   '} Price:
-		// 					<input
-		// 						type="text"
-		// 						value={this.getVal(
-		// 							this.state.data[i]['Price'],
-		// 							this.state.data[i][this.state.propertyName],
-		// 							4
-		// 						)}
-		// 						style={{ borderWidth: 1, borderColor: this.getBorder(4) }}
-		// 						name="name"
-		// 					/>
-		// 					{'   '} Description:
-		// 					<input
-		// 						type="text"
-		// 						value={this.getVal(
-		// 							this.state.data[i]['Description'],
-		// 							this.state.data[i][this.state.propertyName],
-		// 							5
-		// 						)}
-		// 						style={{ borderWidth: 1, borderColor: this.getBorder(5) }}
-		// 						name="name"
-		// 					/>
-		// 				</Card.Header>
-		// 				<Card.Header>{second[i]} </Card.Header>
-		// 				<Card.Description> {third[i]} </Card.Description>
-		// 			</Card.Content>
-		// 		</Card>
-		// 	);
-		/*
-			children.push(
-				<tr>
-					<td>{this.state.data[i]['part no']}</td>
-					<td>{this.state.data[i]['qty']}</td>
-					<td>{this.state.data[i]['Manufacturer']}</td>
-					<td>{this.state.data[i]['Description']}</td>
-					<td>{this.state.data[i]['Price']}</td>
-				</tr>
-			);
-
-			for (let j = 0; j < this.state.skus[i].length; j++) {
-				children.push(
-					<tr>
-						<td>{this.state.skus[i][j]._source.company_sku}</td>
-						<td>{this.state.skus[i][j]._source.manufacturer}</td>
-						<td>{this.state.skus[i][j]._source.description}</td>
-						<td>{this.state.skus[i][j]._source.msrp}</td>
-					</tr>
-				);
-			}*/
-		//}
+		const actions = [
+			<FlatButton label="Re-set columns" primary={true} onClick={this.reset} />,
+			<FlatButton label="Done importing" primary={true} onClick={this.done} />
+		];
 
 		var Popup = (
 			<ToolTip
@@ -176,12 +107,13 @@ class App extends Component {
 		);
 		var datas = [];
 		for (let i = 0; i < this.state.data.length; i++) {
+			let _id = i;
 			datas.push(
 				<tr className="lineitem" id="uploaded0">
 					<td className="closer">
 						<div>
 							<a href="#">
-								<i class="fa fa-times" aria-hidden="true" />
+								<i class="fa fa-times" onClick={() => this._remove(_id)} aria-hidden="true" />
 							</a>
 						</div>
 					</td>
@@ -196,7 +128,11 @@ class App extends Component {
 							<input
 								type="text"
 								style={{ borderWidth: 1, borderColor: this.getBorder(1) }}
-								value="INA_3P96478E"
+								value={this.getVal(
+									this.state.data[i][this.state.title[0]],
+									this.state.data[i][this.state.propertyName],
+									1
+								)}
 							/>
 						</div>
 					</td>
@@ -212,7 +148,11 @@ class App extends Component {
 								className="form-control"
 								style={{ borderWidth: 1, borderColor: this.getBorder(2) }}
 								type="number"
-								value="1"
+								value={this.getVal(
+									this.state.data[i][this.state.title[1]],
+									this.state.data[i][this.state.propertyName],
+									2
+								)}
 							/>
 						</div>
 					</td>
@@ -231,7 +171,13 @@ class App extends Component {
 											<a href="#" className="edit-link">
 												Edit
 											</a>
-											<div />
+											<div style={{ borderWidth: 1, borderColor: this.getBorder(3) }}>
+												{this.getVal(
+													this.state.data[i][this.state.title[2]],
+													this.state.data[i][this.state.propertyName],
+													3
+												)}
+											</div>
 											<a href="#" className="more-link">
 												More...
 											</a>
@@ -242,7 +188,13 @@ class App extends Component {
 											<a href="#" className="edit-link">
 												Edit
 											</a>
-											<div />
+											<div style={{ borderWidth: 1, borderColor: this.getBorder(4) }}>
+												{this.getVal(
+													this.state.data[i][this.state.title[3]],
+													this.state.data[i][this.state.propertyName],
+													4
+												)}
+											</div>
 											<a href="#" className="more-link">
 												More...
 											</a>
@@ -253,7 +205,13 @@ class App extends Component {
 											<a href="#" className="edit-link">
 												Edit
 											</a>
-											<div />
+											<div style={{ borderWidth: 1, borderColor: this.getBorder(5) }}>
+												{this.getVal(
+													this.state.data[i][this.state.title[4]],
+													this.state.data[i][this.state.propertyName],
+													5
+												)}
+											</div>
 											<a href="#" className="more-link">
 												More...
 											</a>
@@ -320,6 +278,9 @@ class App extends Component {
 		}
 		return (
 			<div className="body" style={{ paddingTop: 120 }}>
+				<Dialog actions={actions} modal={true} open={this.state.open}>
+					Everything look okay?
+				</Dialog>
 				<div className="page bom-tool show">
 					<div id="bombom">
 						<div className="bombom">
@@ -361,10 +322,7 @@ class App extends Component {
 											<th className="column-group-selector-heading" colspan="2">
 												<div>
 													<div className="column-group-selector">
-														<a href="#" className="opener">
-															<i className="icon icon_gear" />
-															<i className="icon icon_arrow_down_small" />
-														</a>
+														<a href="#" className="opener" />
 													</div>
 												</div>
 											</th>
@@ -440,7 +398,7 @@ class App extends Component {
 												</div>
 											</th>
 											<th className="item">
-												{this.state.id == 1 ? (
+												{!this.state.done && this.state.id == 1 ? (
 													<div>
 														<div>Part Number</div>
 														{Popup}
@@ -450,7 +408,7 @@ class App extends Component {
 												)}
 											</th>
 											<th className="quantity">
-												{this.state.id == 2 ? (
+												{!this.state.done && this.state.id == 2 ? (
 													<div>
 														<div>Qty</div>
 														{Popup}
@@ -460,14 +418,7 @@ class App extends Component {
 												)}
 											</th>
 											<th className="manufacturer-mpn">
-												{this.state.id == 3 ? (
-													<div>
-														<div>Manufacturer/MPN</div>
-														{Popup}
-													</div>
-												) : (
-													<div>Manufacturer/MPN</div>
-												)}
+												<div>Manufacturer/MPN</div>
 											</th>
 											<th className="lineitem-details-heading-bottom">
 												<div>
@@ -476,7 +427,7 @@ class App extends Component {
 															<tr>
 																<th className="lineitem-details-column schematic-reference">
 																	<div>
-																		{this.state.id == 3 ? (
+																		{!this.state.done && this.state.id == 3 ? (
 																			<div>
 																				<div>Schematic Reference</div>
 																				{Popup}
@@ -488,7 +439,7 @@ class App extends Component {
 																</th>
 																<th className="lineitem-details-column internal-part-number">
 																	<div>
-																		{this.state.id == 4 ? (
+																		{!this.state.done && this.state.id == 4 ? (
 																			<div>
 																				<div>Internal Part Number</div>
 																				{Popup}
@@ -500,7 +451,7 @@ class App extends Component {
 																</th>
 																<th className="lineitem-details-column description">
 																	<div>
-																		{this.state.id == 5 ? (
+																		{!this.state.done && this.state.id == 5 ? (
 																			<div>
 																				<div>Description</div>
 																				{Popup}

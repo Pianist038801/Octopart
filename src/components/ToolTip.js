@@ -1,16 +1,35 @@
 import React, { Component } from 'react';
+
+import DropDownMenu from 'material-ui/DropDownMenu';
+import MenuItem from 'material-ui/MenuItem';
 var FontAwesome = require('react-fontawesome');
 const options = [ 'Part Number', 'Qty', 'Schemantic Reference', 'Internal Part Number', 'Description' ];
 const downOption = [ 'part no', 'qty', 'Manufacturer', 'Description', 'Price' ];
 class ToolTip extends Component {
 	constructor(props) {
 		super(props);
-		this.state = { downOption: props.downOption, num: props.num - 1, filename: 'sample octo.xslx' };
+		this.state = {
+			value: props.num,
+			downOption: props.downOption,
+			num: props.num - 1,
+			filename: 'sample octo.xslx'
+		};
 	}
 	componentWillReceiveProps(props) {
 		this.setState({ downOption: props.downOption, num: props.num - 1 });
 	}
-
+	changeFunc = () => {
+		alert('3');
+		var selectBox = document.getElementById('selectBox');
+		var selectedValue = selectBox.options[selectBox.selectedIndex].value;
+		alert(selectedValue);
+		this.props.onChange(selectedValue);
+	};
+	handleChange = (event, index, value) => {
+		if (value == 0) this.props.onChange('');
+		else this.props.onChange(this.state.downOption[value - 1]);
+		this.setState({ value });
+	};
 	render() {
 		return (
 			<div class="choose-column-tooltip">
@@ -26,23 +45,12 @@ class ToolTip extends Component {
 					<form>
 						<div class="column-select-container">
 							<div class="column-select">
-								<select>
-									{this.state.num != 0 && <option>[skip this column]</option>}
+								<DropDownMenu value={this.state.value} onChange={this.handleChange}>
+									{this.state.num != 0 && <MenuItem value={0} primaryText="[skip this column]" />}
 									{this.state.downOption.map((val, id) => (
-										<option
-											value={id}
-											onClick={() => this.props.onChange(this.state.downOption[id])}
-										>
-											{this.state.downOption[id]}
-										</option>
+										<MenuItem value={id + 1} primaryText={this.state.downOption[id]} />
 									))}
-								</select>
-								<FontAwesome
-									className="super-crazy-colors"
-									name="angle-down"
-									size="1x"
-									style={{ textShadow: '0 1px 0 rgba(0, 0, 0, 0.1)' }}
-								/>
+								</DropDownMenu>
 							</div>
 						</div>
 						<div class="step-controls">

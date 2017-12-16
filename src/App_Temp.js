@@ -188,3 +188,45 @@ class App extends Component {
 	}
 }
 export default App;
+
+<td class="lineitem-details">
+	<table>
+		<tbody>
+			<tr>
+				<td class="lineitem-details-column lineitem-details-column-schematicReference">
+					<div>
+						<a href="#" class="edit-link">
+							Edit
+						</a>
+						<div>Siemens</div>
+						<a href="#" class="more-link">
+							More...
+						</a>
+					</div>
+				</td>
+				<td class="lineitem-details-column lineitem-details-column-internalPartNumber">
+					<div>
+						<a href="#" class="edit-link">
+							Edit
+						</a>
+						<div>Lorem ipsum .1234</div>
+						<a href="#" class="more-link">
+							More...
+						</a>
+					</div>
+				</td>
+				<td class="lineitem-details-column lineitem-details-column-description">
+					<div>
+						<a href="#" class="edit-link">
+							Edit
+						</a>
+						<div>100</div>
+						<a href="#" class="more-link">
+							More...
+						</a>
+					</div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+</td>;
