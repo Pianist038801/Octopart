@@ -7,6 +7,16 @@ class App extends Component {
 	constructor(props) {
 		super(props);
 		this.dropZone = null;
+		this.state = { boms: [] };
+	}
+	componentDidMount() {
+		var bomData = localStorage.getItem('boms');
+		console.log('BomDATA=', bomData);
+		var boms = [];
+		if (bomData == null || bomData == 'null' || bomData == undefined) boms = [];
+		else boms = JSON.parse(bomData);
+
+		this.setState({ boms: boms });
 	}
 	loadFile(files) {
 		const f = files[0];
@@ -26,13 +36,31 @@ class App extends Component {
 			this.props.history.push({
 				pathname: '/main',
 				state: {
-					data: data
+					data: data,
+					bomID: this.state.boms.length
 				}
 			});
 		};
 		reader.readAsBinaryString(f);
 	}
+
 	render() {
+		var boms = [];
+		console.log('BOMARRAY=', this.state.boms);
+		for (var i = 0; i < this.state.boms.length; i++) {
+			let j = i;
+			let _href = '/main/' + j.toString();
+			boms.push(
+				<ul>
+					<li class="first-in-row">
+						<a class="saved-bom" href={_href} target="_blank">
+							<h3>{this.state.boms[i].title}</h3>
+							<div class="last-updated">Last updated: {this.state.boms[i].date}</div>
+						</a>
+					</li>
+				</ul>
+			);
+		}
 		return (
 			<section className="content bom-tool manage" style={{ marginTop: '-60px' }}>
 				<div className="inner">
@@ -136,7 +164,11 @@ class App extends Component {
 				</div>
 				<div className="inner">
 					<h2>Saved BOMs</h2>
-
+					<div class="saved-boms">
+						<div>
+							<div class="saved-boms-list">{boms}</div>
+						</div>
+					</div>
 					<div className="sign-in">
 						<a href="/auth/login?continue_to=https://octopart.com/bom-tool&amp;sig=560745">Sign in</a> to
 						view your Saved BOMs.

@@ -12,27 +12,69 @@ import RaisedButton from 'material-ui/RaisedButton';
 class App extends Component {
 	constructor(props) {
 		super(props);
+		var bomData = localStorage.getItem('boms');
+		var boms = [];
+		if (bomData == 'null' || bomData == undefined || bomData == null) {
+			console.log('No Bom Here');
+			boms = [];
+		} else {
+			console.log('Bom Here', bomData);
+			boms = JSON.parse(bomData);
+		}
 
+		var str = window.location.href;
+		var slashPos = str.lastIndexOf('/');
+		var bomID = str.substr(slashPos + 1);
+
+		var bomArray = [];
+		console.log('BomID=', bomID);
+		if (!isNaN(bomID)) bomArray = boms[bomID].data;
+		else bomArray = props.location.state.data;
 		var data = [];
-		for (let i = 1; i < props.location.state.data.length; i++) {
-			let arr = props.location.state.data[i];
+		for (let i = 1; i < bomArray.length; i++) {
+			let arr = bomArray[i];
 			let temp = {};
 			for (let j = 0; j < arr.length; j++) {
-				temp[props.location.state.data[0][j]] = arr[j];
+				temp[bomArray[0][j]] = arr[j];
 			}
 			data.push(temp);
 		}
+		console.log('BOM ID=', props.bomID);
+		let bNew = false;
+		if (isNaN(bomID)) {
+			bNew = true;
+			bomID = boms.length;
+			boms.push({
+				title: 'Untitled',
+				data: props.location.state.data,
+				date: new Date().toISOString().slice(0, 10)
+			});
+
+			localStorage.setItem('boms', JSON.stringify(boms));
+		}
+
 		this.getDataFromServer(data);
+		console.log('FieldArray=', bomArray[0]);
 		this.state = {
-			field: props.location.state.data[0],
-			title: props.location.state.data[0],
+			new: bNew,
+			bomID: bomID,
+			field: bomArray[0],
+			title: bomArray[0],
+			boms: boms,
 			open: false,
 			data: [],
 			id: 1,
 			done: false,
-			propertyName: 'part no'
+			propertyName: bomArray[0][0]
 		};
 	}
+	saveBom = () => {
+		let bomTemp = this.state.boms.slice(0);
+		bomTemp[this.state.bomID].title = this.state.caption;
+		bomTemp[this.state.bomID].date = new Date().toISOString().slice(0, 10);
+
+		localStorage.setItem('boms', JSON.stringify(bomTemp));
+	};
 	componentDidMount() {}
 	async getDataFromServer(data) {
 		var skus = [];
@@ -40,8 +82,8 @@ class App extends Component {
 			// 	console.log(data[i]['part no']);
 			skus[i] = await getData(data[i]['part no']);
 		}
-
-		this.setState({ data: data, skus: skus });
+		console.log('Dat=', data);
+		this.setState({ data: data, skus: skus, caption: 'Untitled' });
 	}
 	handleOpen = () => {
 		this.setState({ open: true });
@@ -54,10 +96,10 @@ class App extends Component {
 	};
 	onNext = () => {
 		if (this.state.id == 5) return;
-		this.setState({ id: this.state.id + 1 });
+		this.setState({ id: this.state.id + 1, propertyName: this.state.title[this.state.id] });
 	};
 	onBack = () => {
-		this.setState({ id: this.state.id - 1 });
+		this.setState({ id: this.state.id - 1, propertyName: this.state.title[this.state.id - 2] });
 	};
 	onDone = () => {
 		this.setState({ open: true });
@@ -90,6 +132,8 @@ class App extends Component {
 		this.setState({ data: v });
 	};
 	render() {
+		console.log('ProperyName', this.state.propertyName);
+		console.log('Title', this.state.title[this.state.id - 1]);
 		const actions = [
 			<FlatButton label="Re-set columns" primary={true} onClick={this.reset} />,
 			<FlatButton label="Done importing" primary={true} onClick={this.done} />
@@ -285,9 +329,15 @@ class App extends Component {
 					<div id="bombom">
 						<div className="bombom">
 							<h1>
-								<a href="#" className="bom-name">
-									<span>Untitled BOM</span>
-								</a>
+								<input
+									type="text"
+									value={this.state.caption}
+									onChange={(val) => {
+										this.setState({ caption: val.target.value }, this.saveBom);
+									}}
+									ref={(r) => (this.title = r)}
+									style={{ color: 'blue', fontSize: 20 }}
+								/>
 							</h1>
 							<div className="batch-size-pricing">
 								<div className="batch-size">

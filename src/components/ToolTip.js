@@ -18,13 +18,7 @@ class ToolTip extends Component {
 	componentWillReceiveProps(props) {
 		this.setState({ downOption: props.downOption, num: props.num - 1 });
 	}
-	changeFunc = () => {
-		alert('3');
-		var selectBox = document.getElementById('selectBox');
-		var selectedValue = selectBox.options[selectBox.selectedIndex].value;
-		alert(selectedValue);
-		this.props.onChange(selectedValue);
-	};
+
 	handleChange = (event, index, value) => {
 		if (value == 0) this.props.onChange('');
 		else this.props.onChange(this.state.downOption[value - 1]);
