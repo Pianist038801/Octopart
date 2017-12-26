@@ -8,7 +8,12 @@ import ToolTip from './components/ToolTip.js';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import RaisedButton from 'material-ui/RaisedButton';
+window.addEventListener('beforeunload', (ev) => {
+	console.log('CLOSE FUNCTION');
+	ev.preventDefault();
 
+	return (ev.returnValue = 'Are you sure you want to close?');
+});
 class App extends Component {
 	constructor(props) {
 		super(props);
@@ -28,8 +33,13 @@ class App extends Component {
 
 		var bomArray = [];
 		console.log('BomID=', bomID);
-		if (!isNaN(bomID)) bomArray = boms[bomID].data;
-		else bomArray = props.location.state.data;
+		var _done = false;
+		if (!isNaN(bomID)) {
+			bomArray = boms[bomID].data;
+			_done = true;
+		} else {
+			bomArray = props.location.state.data;
+		}
 		var data = [];
 		for (let i = 1; i < bomArray.length; i++) {
 			let arr = bomArray[i];
@@ -56,6 +66,7 @@ class App extends Component {
 		this.getDataFromServer(data);
 		console.log('FieldArray=', bomArray[0]);
 		this.state = {
+			captionEdit: false,
 			new: bNew,
 			bomID: bomID,
 			field: bomArray[0],
@@ -64,7 +75,7 @@ class App extends Component {
 			open: false,
 			data: [],
 			id: 1,
-			done: false,
+			done: _done,
 			propertyName: bomArray[0][0]
 		};
 	}
@@ -75,7 +86,9 @@ class App extends Component {
 
 		localStorage.setItem('boms', JSON.stringify(bomTemp));
 	};
-	componentDidMount() {}
+	componentWillUnmount() {
+		alert('UM');
+	}
 	async getDataFromServer(data) {
 		var skus = [];
 		for (let i = 0; i < data.length; i++) {
@@ -89,7 +102,16 @@ class App extends Component {
 		this.setState({ open: true });
 	};
 	done = () => {
-		this.setState({ open: false, done: true });
+		//Format Datas
+		var _data = this.state.data.slice(0);
+
+		for (var i = 0; i < this.state.data.length; i++) {
+			for (var j = this.state.id; j < this.state.title.length; j++) {
+				_data[i][this.state.title[j]] = j == 1 ? 1 : '';
+			}
+		}
+
+		this.setState({ data: _data, open: false, done: true });
 	};
 	reset = () => {
 		this.setState({ open: false, id: 1 });
@@ -115,7 +137,9 @@ class App extends Component {
 	};
 
 	getVal = (str, strSel, ind) => {
+		if (this.state.done) return str;
 		if (this.state.done && ind == 2 && this.state.id == 1) return '1';
+
 		if (this.state.id == ind) return strSel;
 		if (this.state.id > ind) return str;
 		return '';
@@ -131,14 +155,16 @@ class App extends Component {
 		v.splice(ind, 1);
 		this.setState({ data: v });
 	};
+	handleInputChange(index, event) {
+		const target = event.target;
+		const value = target.value;
+		const name = target.name;
+		var _data = this.state.data.slice(0);
+		_data[index][name] = value;
+		this.setState({ data: _data });
+		alert(index + ': ' + name + ':' + value);
+	}
 	render() {
-		console.log('ProperyName', this.state.propertyName);
-		console.log('Title', this.state.title[this.state.id - 1]);
-		const actions = [
-			<FlatButton label="Re-set columns" primary={true} onClick={this.reset} />,
-			<FlatButton label="Done importing" primary={true} onClick={this.done} />
-		];
-
 		var Popup = (
 			<ToolTip
 				downOption={this.state.field}
@@ -157,7 +183,11 @@ class App extends Component {
 					<td className="closer">
 						<div>
 							<a href="#">
-								<i class="fa fa-times" onClick={() => this._remove(_id)} aria-hidden="true" />
+								<img
+									style={{ width: '15px', height: '15px' }}
+									src="/assets/close.png"
+									onClick={() => this._remove(_id)}
+								/>
 							</a>
 						</div>
 					</td>
@@ -177,6 +207,8 @@ class App extends Component {
 									this.state.data[i][this.state.propertyName],
 									1
 								)}
+								name={this.state.title[0]}
+								onChange={this.handleInputChange.bind(this, i)}
 							/>
 						</div>
 					</td>
@@ -197,6 +229,8 @@ class App extends Component {
 									this.state.data[i][this.state.propertyName],
 									2
 								)}
+								name={this.state.title[1]}
+								onChange={this.handleInputChange.bind(this, i)}
 							/>
 						</div>
 					</td>
@@ -322,22 +356,65 @@ class App extends Component {
 		}
 		return (
 			<div className="body" style={{ paddingTop: 120 }}>
-				<Dialog actions={actions} modal={true} open={this.state.open}>
+				<Dialog
+					modal={true}
+					open={this.state.open}
+					bodyStyle={{ backgroundColor: 'black', color: 'white', alignItems: 'center' }}
+				>
 					Everything look okay?
+					<button style={{ marginLeft: 250, marginRight: 20 }} onClick={this.reset}>
+						Re-set columns
+					</button>
+					<button onClick={this.done}>Done importing</button>
 				</Dialog>
 				<div className="page bom-tool show">
 					<div id="bombom">
 						<div className="bombom">
 							<h1>
-								<input
-									type="text"
-									value={this.state.caption}
-									onChange={(val) => {
-										this.setState({ caption: val.target.value }, this.saveBom);
-									}}
-									ref={(r) => (this.title = r)}
-									style={{ color: 'blue', fontSize: 20 }}
-								/>
+								{!this.state.captionEdit ? (
+									<button
+										style={{
+											backgroundColor: 'transparent',
+											borderWidth: 0,
+											color: 'rgb(41,92,174)',
+
+											fontSize: 30
+										}}
+										onClick={() => {
+											this.setState({ captionEdit: true, caption1: this.state.caption });
+										}}
+									>
+										{this.state.caption}
+									</button>
+								) : (
+									<div>
+										<input
+											type="text"
+											value={this.state.caption1}
+											onChange={(val) => {
+												this.setState({ caption1: val.target.value });
+											}}
+											ref={(r) => (this.title = r)}
+											style={{ width: '200px', color: 'rgb(41,92,174)', fontSize: 30 }}
+										/>
+										<label
+											onClick={() =>
+												this.setState(
+													{ caption: this.state.caption1, captionEdit: false },
+													this.saveBom
+												)}
+											style={{ marginLeft: 20, marginRight: 20, color: 'grey', fontSize: 10 }}
+										>
+											OK
+										</label>
+										<label
+											onClick={() => this.setState({ captionEdit: false })}
+											style={{ color: 'grey', fontSize: 10 }}
+										>
+											Cancel
+										</label>
+									</div>
+								)}
 							</h1>
 							<div className="batch-size-pricing">
 								<div className="batch-size">
@@ -346,14 +423,14 @@ class App extends Component {
 								</div>
 								<div className="pricing">
 									<h3 className="bom-total">
-										<small className="currency-code">NOK</small>
+										<small className="currency-code">INR</small>
 										<span> </span>
 										<span className="amount">0.00</span>
 										<span> each</span>
 									</h3>
 									<h4 className="batch-total-bom-coverage">
 										<div className="batch-total">
-											<small className="currency-code">NOK</small>
+											<small className="currency-code">INR</small>
 											<span> </span>
 											<span className="amount">0.00</span>
 											<span> total</span>
@@ -609,7 +686,6 @@ class App extends Component {
 									</tr>
 								</tfoot>
 							</table>
-							<div className="modals" />
 						</div>
 					</div>
 				</div>

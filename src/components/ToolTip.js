@@ -39,7 +39,18 @@ class ToolTip extends Component {
 					<form>
 						<div class="column-select-container">
 							<div class="column-select">
-								<DropDownMenu value={this.state.value} onChange={this.handleChange}>
+								<DropDownMenu
+									style={{
+										backgroundColor: 'rgb(85,85,85)',
+										height: 25,
+										border: '1px solid rgba(122, 122, 122, 1)'
+									}}
+									labelStyle={{ color: 'white', position: 'relative', top: '-15px' }}
+									iconStyle={{ top: '-10px', width: '25px' }}
+									underlineStyle={{ borderTop: '0px solid rgba(0, 0, 0, 0)' }}
+									value={this.state.value}
+									onChange={this.handleChange}
+								>
 									{this.state.num != 0 && <MenuItem value={0} primaryText="[skip this column]" />}
 									{this.state.downOption.map((val, id) => (
 										<MenuItem value={id + 1} primaryText={this.state.downOption[id]} />
