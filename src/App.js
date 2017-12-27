@@ -36,8 +36,7 @@ class App extends Component {
 			this.props.history.push({
 				pathname: '/main',
 				state: {
-					data: data,
-					bomID: this.state.boms.length
+					data: data
 				}
 			});
 		};
@@ -53,7 +52,18 @@ class App extends Component {
 			boms.push(
 				<ul>
 					<li class="first-in-row">
-						<a class="saved-bom" href={_href} target="_blank">
+						<a
+							class="saved-bom"
+							onClick={() => {
+								this.props.history.push({
+									pathname: '/main',
+									state: {
+										bomID: j
+									}
+								});
+							}}
+							target="_blank"
+						>
 							<h3>{this.state.boms[i].title}</h3>
 							<div class="last-updated">Last updated: {this.state.boms[i].date}</div>
 						</a>

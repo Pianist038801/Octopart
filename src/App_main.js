@@ -8,48 +8,48 @@ import ToolTip from './components/ToolTip.js';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import RaisedButton from 'material-ui/RaisedButton';
-window.addEventListener('beforeunload', (ev) => {
-	console.log('CLOSE FUNCTION');
-	ev.preventDefault();
 
-	return (ev.returnValue = 'Are you sure you want to close?');
-});
 class App extends Component {
+	setState(prop) {
+		super.setState(prop, this.saveBom);
+	}
+
 	constructor(props) {
 		super(props);
+		this.setState = this.setState.bind(this);
 		var bomData = localStorage.getItem('boms');
 		var boms = [];
 		if (bomData == 'null' || bomData == undefined || bomData == null) {
 			console.log('No Bom Here');
 			boms = [];
 		} else {
-			console.log('Bom Here', bomData);
+			console.log('Bom Here');
 			boms = JSON.parse(bomData);
+			console.log(boms);
 		}
-
-		var str = window.location.href;
-		var slashPos = str.lastIndexOf('/');
-		var bomID = str.substr(slashPos + 1);
-
+		var bomID = props.location.state.bomID;
 		var bomArray = [];
 		console.log('BomID=', bomID);
 		var _done = false;
+		var _totalCount = 0;
 		if (!isNaN(bomID)) {
 			bomArray = boms[bomID].data;
+			_totalCount = boms[bomID].totalCount;
 			_done = true;
 		} else {
 			bomArray = props.location.state.data;
 		}
 		var data = [];
-		for (let i = 1; i < bomArray.length; i++) {
-			let arr = bomArray[i];
-			let temp = {};
-			for (let j = 0; j < arr.length; j++) {
-				temp[bomArray[0][j]] = arr[j];
+		if (isNaN(bomID))
+			for (let i = 1; i < bomArray.length; i++) {
+				let arr = bomArray[i];
+				let temp = {};
+				for (let j = 0; j < arr.length; j++) {
+					temp[bomArray[0][j]] = arr[j];
+				}
+				data.push(temp);
 			}
-			data.push(temp);
-		}
-		console.log('BOM ID=', props.bomID);
+		else data = bomArray.slice(1);
 		let bNew = false;
 		if (isNaN(bomID)) {
 			bNew = true;
@@ -60,12 +60,13 @@ class App extends Component {
 				date: new Date().toISOString().slice(0, 10)
 			});
 
-			localStorage.setItem('boms', JSON.stringify(boms));
+			//localStorage.setItem('boms', JSON.stringify(boms));
 		}
 
 		this.getDataFromServer(data);
 		console.log('FieldArray=', bomArray[0]);
 		this.state = {
+			caption: boms[bomID].title,
 			captionEdit: false,
 			new: bNew,
 			bomID: bomID,
@@ -76,19 +77,31 @@ class App extends Component {
 			data: [],
 			id: 1,
 			done: _done,
-			propertyName: bomArray[0][0]
+			propertyName: bomArray[0][0],
+			totalCount: _totalCount,
+			editCaption: 'Schematic Reference',
+			showEdit: false
 		};
 	}
+
 	saveBom = () => {
 		let bomTemp = this.state.boms.slice(0);
 		bomTemp[this.state.bomID].title = this.state.caption;
+		bomTemp[this.state.bomID].totalCount = this.state.totalCount;
 		bomTemp[this.state.bomID].date = new Date().toISOString().slice(0, 10);
+		var _boms = [ this.state.title ].concat(this.state.data);
 
+		bomTemp[this.state.bomID].data = _boms;
 		localStorage.setItem('boms', JSON.stringify(bomTemp));
 	};
+
 	componentWillUnmount() {
-		alert('UM');
+		console.log('UNMOUNT');
+
+		//this.saveBom();
+		console.log(this.state.data);
 	}
+
 	async getDataFromServer(data) {
 		var skus = [];
 		for (let i = 0; i < data.length; i++) {
@@ -96,26 +109,32 @@ class App extends Component {
 			skus[i] = await getData(data[i]['part no']);
 		}
 		console.log('Dat=', data);
-		this.setState({ data: data, skus: skus, caption: 'Untitled' });
+		this.setState({ data: data, skus: skus });
 	}
+
 	handleOpen = () => {
 		this.setState({ open: true });
 	};
+
 	done = () => {
 		//Format Datas
+		console.log('UHAHA');
 		var _data = this.state.data.slice(0);
-
+		var _total = 0;
 		for (var i = 0; i < this.state.data.length; i++) {
 			for (var j = this.state.id; j < this.state.title.length; j++) {
 				_data[i][this.state.title[j]] = j == 1 ? 1 : '';
 			}
+			_total += parseInt(this.state.data[i][this.state.title[1]]);
 		}
 
-		this.setState({ data: _data, open: false, done: true });
+		this.setState({ data: _data, open: false, done: true, totalCount: _total });
 	};
+
 	reset = () => {
-		this.setState({ open: false, id: 1 });
+		this.setState({ open: false, id: 1, propertyName: this.state.title[0] });
 	};
+
 	onNext = () => {
 		if (this.state.id == 5) return;
 		this.setState({ id: this.state.id + 1, propertyName: this.state.title[this.state.id] });
@@ -157,12 +176,23 @@ class App extends Component {
 	};
 	handleInputChange(index, event) {
 		const target = event.target;
-		const value = target.value;
+		let value = target.value;
 		const name = target.name;
 		var _data = this.state.data.slice(0);
-		_data[index][name] = value;
-		this.setState({ data: _data });
-		alert(index + ': ' + name + ':' + value);
+		var _prevVal = _data[index][name];
+
+		if (name == this.state.title[1] && parseInt(value) < 1) {
+		} else {
+			var _total = this.state.totalCount;
+			if (name == this.state.title[1]) {
+				if (value == '') {
+					value = 1;
+				}
+				_data[index][name] = value;
+				_total = parseInt(_total) - parseInt(_prevVal) + parseInt(value);
+			}
+			this.setState({ data: _data, totalCount: _total });
+		}
 	}
 	render() {
 		var Popup = (
@@ -246,7 +276,17 @@ class App extends Component {
 								<tr>
 									<td className="lineitem-details-column lineitem-details-column-schematicReference">
 										<div>
-											<a href="#" className="edit-link">
+											<a
+												href="#"
+												onClick={() =>
+													this.setState({
+														editIndex: i,
+														editField: this.state.title[2],
+														editShow: true,
+														editCaption: 'Schemaic Reference'
+													})}
+												className="edit-link"
+											>
 												Edit
 											</a>
 											<div style={{ borderWidth: 1, borderColor: this.getBorder(3) }}>
@@ -263,7 +303,17 @@ class App extends Component {
 									</td>
 									<td className="lineitem-details-column lineitem-details-column-internalPartNumber">
 										<div>
-											<a href="#" className="edit-link">
+											<a
+												href="#"
+												className="edit-link"
+												onClick={() =>
+													this.setState({
+														editIndex: i,
+														editField: this.state.title[3],
+														editShow: true,
+														editCaption: 'Internal Part Number'
+													})}
+											>
 												Edit
 											</a>
 											<div style={{ borderWidth: 1, borderColor: this.getBorder(4) }}>
@@ -280,7 +330,17 @@ class App extends Component {
 									</td>
 									<td className="lineitem-details-column lineitem-details-column-description">
 										<div>
-											<a href="#" className="edit-link">
+											<a
+												href="#"
+												className="edit-link"
+												onClick={() =>
+													this.setState({
+														editIndex: i,
+														editField: this.state.title[4],
+														editShow: true,
+														editCaption: 'Description'
+													})}
+											>
 												Edit
 											</a>
 											<div style={{ borderWidth: 1, borderColor: this.getBorder(5) }}>
@@ -354,6 +414,7 @@ class App extends Component {
 				</tr>
 			);
 		}
+
 		return (
 			<div className="body" style={{ paddingTop: 120 }}>
 				<Dialog
@@ -399,10 +460,7 @@ class App extends Component {
 										/>
 										<label
 											onClick={() =>
-												this.setState(
-													{ caption: this.state.caption1, captionEdit: false },
-													this.saveBom
-												)}
+												this.setState({ caption: this.state.caption1, captionEdit: false })}
 											style={{ marginLeft: 20, marginRight: 20, color: 'grey', fontSize: 10 }}
 										>
 											OK
@@ -680,12 +738,63 @@ class App extends Component {
 											<div>Component count:</div>
 										</td>
 										<td className="component-count">
-											<div>{this.state.data.length}</div>
+											<div>{this.state.totalCount}</div>
 										</td>
 										<td colspan="8" />
 									</tr>
 								</tfoot>
 							</table>
+							{this.state.editShow && (
+								<div class="modals">
+									<div class="lineitem-details modal" style={{ display: 'block' }}>
+										<div class="modal-dialog">
+											<div class="modal-content">
+												<div class="modal-header">
+													<a
+														href="#"
+														class="closer"
+														onClick={() => this.setState({ editShow: false })}
+													>
+														<img
+															style={{ width: '15px', height: '15px' }}
+															src="/assets/close.png"
+														/>
+													</a>
+													<h3>{this.state.editCaption}</h3>
+												</div>
+												<div class="modal-body">
+													<textarea id="editArea">
+														{this.state.data[this.state.editIndex][this.state.editField]}
+													</textarea>
+												</div>
+												<div class="modal-footer">
+													<a
+														href="#"
+														class="button button-primary"
+														onClick={() => {
+															var _data = this.state.data;
+															_data[this.state.editIndex][
+																this.state.editField
+															] = document.getElementById('editArea').value;
+
+															this.setState({ dat: _data, editShow: false });
+														}}
+													>
+														Save changes
+													</a>
+													<a
+														href="#"
+														class="button"
+														onClick={() => this.setState({ editShow: false })}
+													>
+														Cancel
+													</a>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							)}
 						</div>
 					</div>
 				</div>
