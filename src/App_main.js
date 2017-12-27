@@ -66,6 +66,8 @@ class App extends Component {
 		this.getDataFromServer(data);
 		console.log('FieldArray=', bomArray[0]);
 		this.state = {
+			showStockList: false,
+			showMatchList: false,
 			caption: boms[bomID].title,
 			captionEdit: false,
 			new: bNew,
@@ -188,9 +190,10 @@ class App extends Component {
 				if (value == '') {
 					value = 1;
 				}
-				_data[index][name] = value;
+
 				_total = parseInt(_total) - parseInt(_prevVal) + parseInt(value);
 			}
+			_data[index][name] = value;
 			this.setState({ data: _data, totalCount: _total });
 		}
 	}
@@ -264,12 +267,395 @@ class App extends Component {
 							/>
 						</div>
 					</td>
-					<td className="matched-parts no-matches-found">
-						<div>No matches found</div>
-						<a href="#" className="create-custom-lineitem">
-							Create custom row
-						</a>
-					</td>
+					{i == 0 ? (
+						<td class="matched-parts availability-good">
+							<div>
+								<div>
+									<a
+										href="https://octopart.com/afk227m63h32t-f-cornell+dubilier-4030445"
+										target="_blank"
+										class="selected-part"
+									>
+										<div class="manufacturer-name">Cornell Dubilier</div>
+										<div class="mpn">AFK227M63H32T-F</div>
+									</a>
+									<div class="offers-indicator">
+										<a
+											href="#"
+											onClick={() => this.setState({ showStockList: !this.state.showStockList })}
+										>
+											25
+										</a>
+										{this.state.showStockList && (
+											<div class="offers-tooltip">
+												<div>
+													<div>
+														<p>
+															<span>10</span>
+															<span> </span>
+															<span>distributors</span>
+															<span> </span>
+															<span>have</span>
+															<span> this in-stock and available at qty </span>
+															<span>1</span>
+															<span>:</span>
+														</p>
+														<table>
+															<thead>
+																<tr>
+																	<th>Distributor</th>
+																	<th>Stock</th>
+																	<th>Price</th>
+																</tr>
+															</thead>
+															<tbody>
+																<tr>
+																	<td>
+																		<span>Digi-Key</span>
+																		<span class="packaging">
+																			<span> (</span>
+																			<span>Cut Tape</span>
+																			<span>)</span>
+																		</span>
+																	</td>
+																	<td>
+																		<div class="in-stock-quantity">11,013</div>
+																	</td>
+																	<td>
+																		<div class="price-at-total-quantity was-converted">
+																			<small class="currency-code">INR</small>
+																			<span> </span>
+																			<span class="amount">135.99270</span>
+																			<span class="conversion-asterisk">*</span>
+																			<noscript />
+																		</div>
+																	</td>
+																</tr>
+																<tr>
+																	<td>
+																		<span>Digi-Key</span>
+																		<span class="packaging">
+																			<span> (</span>
+																			<span>Custom Reel</span>
+																			<span>)</span>
+																		</span>
+																	</td>
+																	<td>
+																		<div class="in-stock-quantity">11,013</div>
+																	</td>
+																	<td>
+																		<div class="price-at-total-quantity was-converted">
+																			<small class="currency-code">INR</small>
+																			<span> </span>
+																			<span class="amount">135.99270</span>
+																			<span class="conversion-asterisk">*</span>
+																			<noscript />
+																		</div>
+																	</td>
+																</tr>
+																<tr>
+																	<td>
+																		<span>Arrow</span>
+																		<span class="packaging" />
+																	</td>
+																	<td>
+																		<div class="in-stock-quantity">97</div>
+																	</td>
+																	<td>
+																		<div class="price-at-total-quantity was-converted">
+																			<small class="currency-code">INR</small>
+																			<span> </span>
+																			<span class="amount">119.17323</span>
+																			<span class="conversion-asterisk">*</span>
+																			<noscript />
+																		</div>
+																	</td>
+																</tr>
+																<tr>
+																	<td>
+																		<span>Mouser</span>
+																		<span class="packaging" />
+																	</td>
+																	<td>
+																		<div class="in-stock-quantity">2,235</div>
+																	</td>
+																	<td>
+																		<div class="price-at-total-quantity was-converted">
+																			<small class="currency-code">INR</small>
+																			<span> </span>
+																			<span class="amount">117.38992</span>
+																			<span class="conversion-asterisk">*</span>
+																			<noscript />
+																		</div>
+																	</td>
+																</tr>
+																<tr>
+																	<td>
+																		<span>Onlinecomponents.com</span>
+																		<span class="packaging">
+																			<span> (</span>
+																			<span>Bulk</span>
+																			<span>)</span>
+																		</span>
+																	</td>
+																	<td>
+																		<div class="in-stock-quantity">100</div>
+																	</td>
+																	<td>
+																		<div class="price-at-total-quantity was-converted">
+																			<small class="currency-code">INR</small>
+																			<span> </span>
+																			<span class="amount">59.01570</span>
+																			<span class="conversion-asterisk">*</span>
+																			<noscript />
+																		</div>
+																	</td>
+																</tr>
+																<tr>
+																	<td>
+																		<span>Master Electronics</span>
+																		<span class="packaging" />
+																	</td>
+																	<td>
+																		<div class="in-stock-quantity">88</div>
+																	</td>
+																	<td>
+																		<div class="price-at-total-quantity was-converted">
+																			<small class="currency-code">INR</small>
+																			<span> </span>
+																			<span class="amount">59.01570</span>
+																			<span class="conversion-asterisk">*</span>
+																			<noscript />
+																		</div>
+																	</td>
+																</tr>
+																<tr>
+																	<td>
+																		<span>Farnell</span>
+																		<span class="packaging">
+																			<span> (</span>
+																			<span>Cut Tape</span>
+																			<span>)</span>
+																		</span>
+																	</td>
+																	<td>
+																		<div class="in-stock-quantity">227</div>
+																	</td>
+																	<td>
+																		<div class="price-at-total-quantity was-converted">
+																			<small class="currency-code">INR</small>
+																			<span> </span>
+																			<span class="amount">162.17846</span>
+																			<span class="conversion-asterisk">*</span>
+																			<noscript />
+																		</div>
+																	</td>
+																</tr>
+																<tr>
+																	<td>
+																		<span>Newark</span>
+																		<span class="packaging">
+																			<span> (</span>
+																			<span>Cut Tape</span>
+																			<span>)</span>
+																		</span>
+																	</td>
+																	<td>
+																		<div class="in-stock-quantity">227</div>
+																	</td>
+																	<td>
+																		<div class="price-at-total-quantity was-converted">
+																			<small class="currency-code">INR</small>
+																			<span> </span>
+																			<span class="amount">60.23450</span>
+																			<span class="conversion-asterisk">*</span>
+																			<noscript />
+																		</div>
+																	</td>
+																</tr>
+																<tr>
+																	<td>
+																		<span>element14 APAC</span>
+																		<span class="packaging" />
+																	</td>
+																	<td>
+																		<div class="in-stock-quantity">227</div>
+																	</td>
+																	<td>
+																		<div class="price-at-total-quantity was-converted">
+																			<small class="currency-code">INR</small>
+																			<span> </span>
+																			<span class="amount">139.50811</span>
+																			<span class="conversion-asterisk">*</span>
+																			<noscript />
+																		</div>
+																	</td>
+																</tr>
+																<tr>
+																	<td>
+																		<span>Quest</span>
+																		<span class="packaging" />
+																	</td>
+																	<td>
+																		<div class="in-stock-quantity">87</div>
+																	</td>
+																	<td>
+																		<div class="price-at-total-quantity was-converted">
+																			<small class="currency-code">INR</small>
+																			<span> </span>
+																			<span class="amount">128.29500</span>
+																			<span class="conversion-asterisk">*</span>
+																			<noscript />
+																		</div>
+																	</td>
+																</tr>
+															</tbody>
+														</table>
+													</div>
+													<div>
+														<p>Out-of-stock or insufficient stock:</p>
+														<table>
+															<thead>
+																<tr>
+																	<th>Distributor</th>
+																	<th>Stock</th>
+																	<th>Price</th>
+																</tr>
+															</thead>
+															<tbody>
+																<tr>
+																	<td>
+																		<span>Allied Electronics</span>
+																		<span class="packaging">
+																			<span> (</span>
+																			<span>Bulk</span>
+																			<span>)</span>
+																		</span>
+																	</td>
+																	<td>
+																		<div class="in-stock-quantity has-stock-problem">
+																			0
+																		</div>
+																	</td>
+																	<td>
+																		<div class="price-at-total-quantity was-converted">
+																			<small class="currency-code">INR</small>
+																			<span> </span>
+																			<span class="amount">83.39175</span>
+																			<span class="conversion-asterisk">*</span>
+																			<noscript />
+																		</div>
+																	</td>
+																</tr>
+															</tbody>
+														</table>
+													</div>
+													<p class="distributors-with-pricing-at-higher-quantity">
+														<span>14</span>
+														<span> distributors with pricing at qty &gt; </span>
+														<span>1</span>
+													</p>
+												</div>
+											</div>
+										)}
+									</div>
+								</div>
+								<noscript />
+								<ul class="empty" />
+							</div>
+						</td>
+					) : i == 1 ? (
+						<td class="matched-parts availability-good other-parts-is-open">
+							<div>
+								<div>
+									<a
+										href="https://octopart.com/ina114ap-texas+instruments-414192"
+										target="_blank"
+										class="selected-part"
+									>
+										<div class="manufacturer-name">Texas Instruments</div>
+										<div class="mpn">INA114AP</div>
+									</a>
+									<noscript />
+								</div>
+								<a
+									href="#"
+									class="caution"
+									onClick={() => {
+										this.setState({ showMatchList: !this.state.showMatchList });
+									}}
+								>
+									<img alt="Multiple matches found" src="/assets/caution.png" /> {' '}
+								</a>
+								{this.state.showMatchList && (
+									<div class="all-parts has-caution">
+										<h4>Multiple matches found</h4>
+										<ul>
+											<li class="part-option availability-good selected">
+												<div>
+													<div class="manufacturer-name-mpn-description">
+														<div class="manufacturer-name">Texas Instruments</div>
+														<div class="mpn">INA114AP</div>
+														<div class="description">
+															SP Amp INSTR Amp Single 18V 8-Pin PDIP
+														</div>
+													</div>
+													<div class="details-image">
+														<a
+															href="https://octopart.com/ina114ap-texas+instruments-414192"
+															target="_blank"
+															class="details"
+														>
+															<span>Details</span>
+														</a>
+														<div class="image">
+															<img
+																src="https://sigma.octopart.com/17935162/image/Texas-Instruments-INA114AP.jpg"
+																alt="Image for INA114AP"
+															/>{' '}
+														</div>
+													</div>
+												</div>
+											</li>
+											<li class="part-option availability-warning">
+												<div>
+													<div class="manufacturer-name-mpn-description">
+														<div class="manufacturer-name">Burr Brown</div>
+														<div class="mpn">INA114AP</div>
+														<div class="description">
+															IC, INSTRUMENT AMP, 1MHZ, 110DB, DIP-8
+														</div>
+													</div>
+													<div class="details-image">
+														<a
+															href="https://octopart.com/ina114ap-burr+brown-11758520"
+															target="_blank"
+															class="details"
+														>
+															<span>Details</span>
+														</a>
+														<div class="image">
+															<img
+																src="https://sigma.octopart.com/37126057/image/Burr-Brown-INA114AP.jpg"
+																alt="Image for INA114AP"
+															/>
+														</div>
+													</div>
+												</div>
+											</li>
+										</ul>
+									</div>
+								)}
+							</div>
+						</td>
+					) : (
+						<td className="matched-parts no-matches-found">
+							<div>No matches found</div>
+							<a href="#" className="create-custom-lineitem">
+								Create custom row
+							</a>
+						</td>
+					)}
 					<td className="lineitem-details">
 						<table>
 							<tbody>
@@ -724,9 +1110,44 @@ class App extends Component {
 										<td colspan="2" className="add-line-item">
 											<div>
 												<input type="text" placeholder="Add MPN or SKU" value="" />
-												<a href="#" className="pastebox-trigger">
+												<a
+													href="#"
+													className="pastebox-trigger"
+													onClick={() => {
+														this.setState({ showPaste: true });
+													}}
+												>
 													Paste
 												</a>
+												{this.state.showPaste && (
+													<div class="pastebox">
+														<a
+															href="#"
+															class="cancel"
+															onClick={() => {
+																this.setState({ showPaste: false });
+															}}
+														>
+															<img
+																style={{ width: '15px', height: '15px' }}
+																src="/assets/close.png"
+															/>
+														</a>
+														<textarea placeholder="MAX232DR, 10" />
+														<div class="instructions">
+															Paste in multiple part numbers and quantities (optional)
+														</div>
+														<a
+															href="#"
+															class="ok"
+															onClick={() => {
+																this.setState({ showPaste: false });
+															}}
+														>
+															OK
+														</a>
+													</div>
+												)}
 											</div>
 										</td>
 										<td colspan="8" />
