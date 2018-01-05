@@ -4,7 +4,7 @@ import DropDownMenu from 'material-ui/DropDownMenu';
 import MenuItem from 'material-ui/MenuItem';
 var FontAwesome = require('react-fontawesome');
 const options = [ 'Part Number', 'Qty', 'Schemantic Reference', 'Internal Part Number', 'Description' ];
-const downOption = [ 'part no', 'qty', 'Manufacturer', 'Description', 'Price' ];
+const downOption = [ 'part no', 'qty', 'Manufacturer', 'Price', 'Description' ];
 class ToolTip extends Component {
 	constructor(props) {
 		super(props);

@@ -33,8 +33,8 @@ export const getInfo = function(sku_num) {
 		},
 		body: JSON.stringify({
 			query: {
-				term: {
-					'company_sku.raw': sku_num
+				match_phrase_prefix: {
+					company_sku: sku_num
 				}
 			}
 		})

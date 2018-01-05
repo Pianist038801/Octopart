@@ -55,6 +55,7 @@ class App extends Component {
 			bomArray = boms[bomID].data;
 			_totalCount = boms[bomID].totalCount;
 			_done = true;
+			this.getTotalScore();
 		} else {
 			bomArray = props.location.state.data;
 		}
@@ -103,10 +104,18 @@ class App extends Component {
 			editCaption: 'Schematic Reference',
 			showEdit: false,
 			suggestions: [],
-			newSku: ''
+			newSku: '',
+			total: 0
 		};
 	}
-
+	addMulti = () => {
+		var str = this.state.multiAdd;
+		var arr = str.split('\n');
+		for (let i = 0; i < arr.length; i++) {
+			let chunk = arr[i].split(',');
+			this.getInfo(-1, chunk[0], parseInt(chunk[1]));
+		}
+	};
 	saveBom = () => {
 		let bomTemp = this.state.boms.slice(0);
 		bomTemp[this.state.bomID].title = this.state.caption;
@@ -132,7 +141,9 @@ class App extends Component {
 			skus[i] = await getData(data[i]['part no']);
 		}
 		console.log('Dat=', data);
+
 		this.setState({ data: data, skus: skus });
+		this.getTotalScore.bind(this);
 	}
 
 	handleOpen = () => {
@@ -150,8 +161,9 @@ class App extends Component {
 			}
 			_total += parseInt(this.state.data[i][this.state.title[1]]);
 		}
-
+		this.getTotalScore();
 		this.setState({ data: _data, open: false, done: true, totalCount: _total });
+		this.getTotalScore.bind(this);
 	};
 
 	reset = () => {
@@ -195,7 +207,12 @@ class App extends Component {
 	_remove = (ind) => {
 		var v = this.state.data.slice(0);
 		v.splice(ind, 1);
-		this.setState({ data: v });
+		let _totalCount = this.state.totalCount - parseInt(this.state.data[ind][this.state.title[1]]);
+		let _total =
+			this.state.total -
+			parseInt(this.state.data[ind][this.state.title[1]]) * parseInt(this.state.data[ind][this.state.title[3]]);
+		this.setState({ data: v, totalCount: _totalCount, total: _total });
+		//this.getTotalScore();
 	};
 	handleInputChange(index, event) {
 		const target = event.target;
@@ -217,8 +234,25 @@ class App extends Component {
 			_data[index][name] = value;
 			this.setState({ data: _data, totalCount: _total });
 		}
+		this.getTotalScore();
 	}
-
+	getTotalScore = () => {
+		let total = 0;
+		for (var i = 0; i < this.state.data.length; i++) {
+			console.log('Val', this.state.data[i]);
+			if (this.state.data[i][this.state.title[3]] != '') {
+				total +=
+					parseInt(this.state.data[i][this.state.title[3]]) *
+					parseInt(this.state.data[i][this.state.title[1]]);
+				console.log(
+					'Val',
+					parseInt(this.state.data[i][this.state.title[3]]) *
+						parseInt(this.state.data[i][this.state.title[1]])
+				);
+			}
+		}
+		this.setState({ total: total });
+	};
 	getSuggestionValue = (suggestion) => suggestion;
 
 	renderSuggestion = (suggestion) =>
@@ -243,13 +277,10 @@ class App extends Component {
 		});
 	};
 	getInfo = async (index, string, count = 1) => {
-		console.log('AAAAAAAAA');
 		console.log(index, ':', string);
 
 		var _data = await getInfo(string);
-		console.log('_____1');
 		let data = this.state.data.splice(0);
-		console.log('_____2');
 		if (index == -1) {
 			this.setState({ newSku: '', totalCount: this.state.totalCount + count });
 			var obj = {};
@@ -263,27 +294,30 @@ class App extends Component {
 			console.log(data, 'data.length=', data.length);
 			index = data.length - 1;
 		}
-		console.log('_____3');
+		data[index][this.state.title[0]] = string;
 		console.log('newIndex=', index);
 		console.log('hit=', _data);
 		if (_data.length == 0) {
 			data[index]['hit'] = [];
-			console.log('_____4');
+			data[index][this.state.title[2]] = data[index][this.state.title[3]] = data[index][this.state.title[4]] = '';
 			this.setState({ data: data });
+			this.getTotalScore();
 			return;
 		}
 
 		if (_data.length == 1) {
-			console.log('_____5');
 			data[index][this.state.title[2]] = _data[0]._source.manufacturer;
-			data[index][this.state.title[3]] = _data[0]._source.description;
-			data[index][this.state.title[4]] = _data[0]._source.price;
+			data[index][this.state.title[3]] = _data[0]._source.price;
+			data[index][this.state.title[4]] = _data[0]._source.description;
 			data[index]['hit'] = _data;
 			this.setState({ data: data });
+			this.getTotalScore();
 			return;
 		}
+		data[index][this.state.title[2]] = data[index][this.state.title[3]] = data[index][this.state.title[4]] = '';
 		data[index]['hit'] = _data;
 		this.setState({ data: data });
+		this.getTotalScore();
 	};
 	addExtra = (sku, count) => {};
 	onSuggestionSelected = (index, event, { suggestion, suggestionValue, suggestionIndex, sectionIndex, method }) => {
@@ -309,10 +343,18 @@ class App extends Component {
 			/>
 		);
 		var datas = [];
-		for (let i = 0; i < this.state.data.length; i++) {
-			let _id = i;
+		let total = 0;
+
+		for (let ids = 0; ids < this.state.data.length; ids++) {
+			let i = ids;
 			let candidates = [];
-			for (let j = 0; this.state.data[i]['hit'] != undefined && j < this.state.data[i]['hit'].length - 1; j++) {
+			if (this.state.data[i]['hit'] != undefined) console.log('HITS=', this.state.data[i]['hit']);
+			for (
+				let j1 = 0;
+				this.state.data[i]['hit'] != undefined && j1 < this.state.data[i]['hit'].length - 1;
+				j1++
+			) {
+				let j = j1;
 				candidates.push(
 					<li
 						class="part-option availability-good selected"
@@ -320,16 +362,22 @@ class App extends Component {
 							//set hit to data
 							let _data = this.state.data.splice(0);
 
-							_data[i][this.state.title[2]] = this.state.data[i]['hit'][j]._source.manufacturer;
-							_data[i][this.state.title[3]] = this.state.data[i]['hit'][j]._source.description;
-							_data[i][this.state.title[4]] = this.state.data[i]['hit'][j]._source.price;
-							this.setState({ data: _data, showMatchList: false });
+							_data[i][this.state.title[2]] =
+								_data[i]['hit'][j]._source.manufacturer + ' ' + _data[i]['hit'][j]._source.company_sku;
+							_data[i][this.state.title[3]] = _data[i]['hit'][j]._source.price;
+							_data[i][this.state.title[4]] = _data[i]['hit'][j]._source.description;
+
+							let _total = this.state.total;
+							_total +=
+								parseInt(_data[i]['hit'][j]._source.price) * parseInt(_data[i][this.state.title[1]]);
+							_data[i]['hit'] = [];
+							this.setState({ data: _data, showMatchList: false, total: _total });
 						}}
 					>
 						<div>
 							<div class="manufacturer-name-mpn-description">
 								<div class="manufacturer-name">{this.state.data[i]['hit'][j]._source.manufacturer}</div>
-								<div class="mpn"> </div>
+								<div class="mpn"> {this.state.data[i]['hit'][j]._source.company_sku} </div>
 								<div class="description">{this.state.data[i]['hit'][j]._source.description}</div>
 							</div>
 							<div class="details-image">
@@ -359,7 +407,7 @@ class App extends Component {
 								<img
 									style={{ width: '15px', height: '15px' }}
 									src="/assets/close.png"
-									onClick={() => this._remove(_id)}
+									onClick={() => this._remove(i)}
 								/>
 							</a>
 						</div>
@@ -467,34 +515,7 @@ class App extends Component {
 								{this.state.showMatchList && (
 									<div class="all-parts has-caution">
 										<h4>Multiple matches found</h4>
-										<ul>
-											<li class="part-option availability-good selected">
-												<div>
-													<div class="manufacturer-name-mpn-description">
-														<div class="manufacturer-name">Texas Instruments</div>
-														<div class="mpn"> </div>
-														<div class="description">
-															SP Amp INSTR Amp Single 18V 8-Pin PDIP
-														</div>
-													</div>
-													<div class="details-image">
-														<a
-															href="https://octopart.com/ina114ap-texas+instruments-414192"
-															target="_blank"
-															class="details"
-														>
-															<span>Details</span>
-														</a>
-														<div class="image">
-															<img
-																src="https://sigma.octopart.com/17935162/image/Texas-Instruments-INA114AP.jpg"
-																alt="Image for INA114AP"
-															/>{' '}
-														</div>
-													</div>
-												</div>
-											</li>
-										</ul>
+										<ul>{candidates}</ul>
 									</div>
 								)}
 							</div>
@@ -656,10 +677,16 @@ class App extends Component {
 						<div>N/A</div>
 					</td>
 					<td className="unit-price empty">
-						<div>N/A</div>
+						<div>
+							{this.state.data[i][this.state.title[3]] != '' && this.state.data[i][this.state.title[3]]}
+						</div>
 					</td>
 					<td className="line-total empty">
-						<div>N/A</div>
+						<div>
+							{this.state.data[i][this.state.title[3]] != '' &&
+								parseInt(this.state.data[i][this.state.title[3]]) *
+									parseInt(this.state.data[i][this.state.title[1]])}
+						</div>
 					</td>
 					<td className="batch-total empty">
 						<div>N/A</div>
@@ -678,7 +705,6 @@ class App extends Component {
 				</tr>
 			);
 		}
-
 		return (
 			<div className="body" style={{ paddingTop: 120 }}>
 				<Dialog
@@ -747,14 +773,14 @@ class App extends Component {
 									<h3 className="bom-total">
 										<small className="currency-code">INR</small>
 										<span> </span>
-										<span className="amount">0.00</span>
+										<span className="amount">{this.state.total}</span>
 										<span> each</span>
 									</h3>
 									<h4 className="batch-total-bom-coverage">
 										<div className="batch-total">
 											<small className="currency-code">INR</small>
 											<span> </span>
-											<span className="amount">0.00</span>
+											<span className="amount">{this.state.total}</span>
 											<span> total</span>
 										</div>
 										<div className="bom-coverage">
@@ -867,7 +893,7 @@ class App extends Component {
 												)}
 											</th>
 											<th className="manufacturer-mpn">
-												<div>Manufacturer/MPN</div>
+												<div>Schematic Reference</div>
 											</th>
 											<th className="lineitem-details-heading-bottom">
 												<div>
@@ -878,11 +904,11 @@ class App extends Component {
 																	<div>
 																		{!this.state.done && this.state.id == 3 ? (
 																			<div>
-																				<div>Schematic Reference</div>
+																				<div>Manufacturer/MPN</div>
 																				{Popup}
 																			</div>
 																		) : (
-																			<div>Schematic Reference</div>
+																			<div>Manufacturer/MPN</div>
 																		)}
 																	</div>
 																</th>
@@ -1041,7 +1067,11 @@ class App extends Component {
 																src="/assets/close.png"
 															/>
 														</a>
-														<textarea placeholder="MAX232DR, 10" />
+														<textarea
+															placeholder="MAX232DR, 10"
+															onChange={(v) =>
+																this.setState({ multiAdd: v.target.value })}
+														/>
 														<div class="instructions">
 															Paste in multiple part numbers and quantities (optional)
 														</div>
@@ -1049,6 +1079,7 @@ class App extends Component {
 															href="#"
 															class="ok"
 															onClick={() => {
+																this.addMulti();
 																this.setState({ showPaste: false });
 															}}
 														>
