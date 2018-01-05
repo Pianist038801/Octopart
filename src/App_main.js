@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import FontAwesome from 'react-fontawesome';
-import { getData, getPrefix } from './api';
+import { getData, getPrefix, getInfo } from './api';
 import { Card, Icon, Image } from 'semantic-ui-react';
 import 'bootstrap/dist/css/bootstrap.css';
 
@@ -102,7 +102,8 @@ class App extends Component {
 			totalCount: _totalCount,
 			editCaption: 'Schematic Reference',
 			showEdit: false,
-			suggestions: []
+			suggestions: [],
+			newSku: ''
 		};
 	}
 
@@ -220,7 +221,12 @@ class App extends Component {
 
 	getSuggestionValue = (suggestion) => suggestion;
 
-	renderSuggestion = (suggestion) => <div>{suggestion}</div>;
+	renderSuggestion = (suggestion) =>
+		suggestion != this.state.highlighted ? (
+			<div>{suggestion}</div>
+		) : (
+			<div style={{ backgroundColor: 'grey' }}>{suggestion}</div>
+		);
 	onSuggestionsFetchRequested = async ({ value }) => {
 		if (value == undefined) return;
 		let _suggestion = await getPrefix(value);
@@ -236,8 +242,60 @@ class App extends Component {
 			suggestions: []
 		});
 	};
-	onSuggestionSelected = (event, { suggestion, suggestionValue, suggestionIndex, sectionIndex, method }) => {
-		//suggestionValue
+	getInfo = async (index, string, count = 1) => {
+		console.log('AAAAAAAAA');
+		console.log(index, ':', string);
+
+		var _data = await getInfo(string);
+		console.log('_____1');
+		let data = this.state.data.splice(0);
+		console.log('_____2');
+		if (index == -1) {
+			this.setState({ newSku: '', totalCount: this.state.totalCount + count });
+			var obj = {};
+			obj[this.state.title[0]] = string;
+			obj[this.state.title[1]] = count;
+			obj[this.state.title[2]] = '';
+			obj[this.state.title[3]] = '';
+			obj[this.state.title[4]] = '';
+
+			data.push(obj);
+			console.log(data, 'data.length=', data.length);
+			index = data.length - 1;
+		}
+		console.log('_____3');
+		console.log('newIndex=', index);
+		console.log('hit=', _data);
+		if (_data.length == 0) {
+			data[index]['hit'] = [];
+			console.log('_____4');
+			this.setState({ data: data });
+			return;
+		}
+
+		if (_data.length == 1) {
+			console.log('_____5');
+			data[index][this.state.title[2]] = _data[0]._source.manufacturer;
+			data[index][this.state.title[3]] = _data[0]._source.description;
+			data[index][this.state.title[4]] = _data[0]._source.price;
+			data[index]['hit'] = _data;
+			this.setState({ data: data });
+			return;
+		}
+		data[index]['hit'] = _data;
+		this.setState({ data: data });
+	};
+	addExtra = (sku, count) => {};
+	onSuggestionSelected = (index, event, { suggestion, suggestionValue, suggestionIndex, sectionIndex, method }) => {
+		event.preventDefault();
+		//var _data = this.state.data.splice(0);
+
+		this.getInfo(index, suggestionValue);
+		//this.setState({ data: _data });
+		//Fix it.
+	};
+	onSuggestionHighlighted = (v) => {
+		this.setState({ highlighted: v.suggestion });
 	};
 	render() {
 		var Popup = (
@@ -253,6 +311,46 @@ class App extends Component {
 		var datas = [];
 		for (let i = 0; i < this.state.data.length; i++) {
 			let _id = i;
+			let candidates = [];
+			for (let j = 0; this.state.data[i]['hit'] != undefined && j < this.state.data[i]['hit'].length - 1; j++) {
+				candidates.push(
+					<li
+						class="part-option availability-good selected"
+						onClick={() => {
+							//set hit to data
+							let _data = this.state.data.splice(0);
+
+							_data[i][this.state.title[2]] = this.state.data[i]['hit'][j]._source.manufacturer;
+							_data[i][this.state.title[3]] = this.state.data[i]['hit'][j]._source.description;
+							_data[i][this.state.title[4]] = this.state.data[i]['hit'][j]._source.price;
+							this.setState({ data: _data, showMatchList: false });
+						}}
+					>
+						<div>
+							<div class="manufacturer-name-mpn-description">
+								<div class="manufacturer-name">{this.state.data[i]['hit'][j]._source.manufacturer}</div>
+								<div class="mpn"> </div>
+								<div class="description">{this.state.data[i]['hit'][j]._source.description}</div>
+							</div>
+							<div class="details-image">
+								<a
+									href="https://octopart.com/ina114ap-texas+instruments-414192"
+									target="_blank"
+									class="details"
+								>
+									<span>Details</span>
+								</a>
+								<div class="image">
+									<img
+										src={this.state.data[i]['hit'][j]._source.image}
+										alt="Image for INA114AP"
+									/>{' '}
+								</div>
+							</div>
+						</div>
+					</li>
+				);
+			}
 			datas.push(
 				<tr className="lineitem" id="uploaded0">
 					<td className="closer">
@@ -275,6 +373,8 @@ class App extends Component {
 					<td className="query">
 						<div>
 							<Autosuggest
+								theme={{ suggestionHighlighted: true }}
+								onSuggestionHighlighted={this.onSuggestionHighlighted}
 								style={{ position: 'absolute', marginTop: 5 }}
 								suggestions={this.state.suggestions}
 								onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
@@ -282,9 +382,19 @@ class App extends Component {
 								getSuggestionValue={this.getSuggestionValue}
 								renderSuggestionsContainer={renderSuggestionsContainer}
 								renderSuggestion={this.renderSuggestion}
-								onSuggestionSelected={this.onSuggestionSelected}
+								onSuggestionSelected={this.onSuggestionSelected.bind(this, i)}
 								inputProps={{
 									style: { borderWidth: 1, borderColor: this.getBorder(1) },
+									onSubmitEditing: () => {},
+									onKeyPress: (ev) => {
+										console.log(`Pressed keyCode ${ev.key}`);
+										if (ev.key === 'Enter') {
+											console.log('Enter Pressed');
+											this.getInfo(i, this.state.data[i][this.state.title[0]]);
+											// Do code here
+											ev.preventDefault();
+										}
+									},
 									value: this.getVal(
 										this.state.data[i][this.state.title[0]],
 										this.state.data[i][this.state.propertyName],
@@ -303,10 +413,14 @@ class App extends Component {
 						</div>
 					</td>
 					<td className="quantity">
-						<div>
+						<div
+							style={{
+								overflow: 'hidden'
+							}}
+						>
 							<input
 								className="form-control"
-								style={{ borderWidth: 1, borderColor: this.getBorder(2) }}
+								style={{ overflow: 'hidden', borderWidth: 1, borderColor: this.getBorder(2) }}
 								type="number"
 								value={this.getVal(
 									this.state.data[i][this.state.title[1]],
@@ -318,304 +432,14 @@ class App extends Component {
 							/>
 						</div>
 					</td>
-					{i == 0 ? (
-						<td class="matched-parts availability-good">
-							<div>
-								<div>
-									<a
-										href="https://octopart.com/afk227m63h32t-f-cornell+dubilier-4030445"
-										target="_blank"
-										class="selected-part"
-									>
-										<div class="manufacturer-name">Cornell Dubilier</div>
-										<div class="mpn">AFK227M63H32T-F</div>
-									</a>
-									<div class="offers-indicator">
-										<a
-											href="#"
-											onClick={() => this.setState({ showStockList: !this.state.showStockList })}
-										>
-											25
-										</a>
-										{this.state.showStockList && (
-											<div class="offers-tooltip">
-												<div>
-													<div>
-														<p>
-															<span>10</span>
-															<span> </span>
-															<span>distributors</span>
-															<span> </span>
-															<span>have</span>
-															<span> this in-stock and available at qty </span>
-															<span>1</span>
-															<span>:</span>
-														</p>
-														<table>
-															<thead>
-																<tr>
-																	<th>Distributor</th>
-																	<th>Stock</th>
-																	<th>Price</th>
-																</tr>
-															</thead>
-															<tbody>
-																<tr>
-																	<td>
-																		<span>Digi-Key</span>
-																		<span class="packaging">
-																			<span> (</span>
-																			<span>Cut Tape</span>
-																			<span>)</span>
-																		</span>
-																	</td>
-																	<td>
-																		<div class="in-stock-quantity">11,013</div>
-																	</td>
-																	<td>
-																		<div class="price-at-total-quantity was-converted">
-																			<small class="currency-code">INR</small>
-																			<span> </span>
-																			<span class="amount">135.99270</span>
-																			<span class="conversion-asterisk">*</span>
-																			<noscript />
-																		</div>
-																	</td>
-																</tr>
-																<tr>
-																	<td>
-																		<span>Digi-Key</span>
-																		<span class="packaging">
-																			<span> (</span>
-																			<span>Custom Reel</span>
-																			<span>)</span>
-																		</span>
-																	</td>
-																	<td>
-																		<div class="in-stock-quantity">11,013</div>
-																	</td>
-																	<td>
-																		<div class="price-at-total-quantity was-converted">
-																			<small class="currency-code">INR</small>
-																			<span> </span>
-																			<span class="amount">135.99270</span>
-																			<span class="conversion-asterisk">*</span>
-																			<noscript />
-																		</div>
-																	</td>
-																</tr>
-																<tr>
-																	<td>
-																		<span>Arrow</span>
-																		<span class="packaging" />
-																	</td>
-																	<td>
-																		<div class="in-stock-quantity">97</div>
-																	</td>
-																	<td>
-																		<div class="price-at-total-quantity was-converted">
-																			<small class="currency-code">INR</small>
-																			<span> </span>
-																			<span class="amount">119.17323</span>
-																			<span class="conversion-asterisk">*</span>
-																			<noscript />
-																		</div>
-																	</td>
-																</tr>
-																<tr>
-																	<td>
-																		<span>Mouser</span>
-																		<span class="packaging" />
-																	</td>
-																	<td>
-																		<div class="in-stock-quantity">2,235</div>
-																	</td>
-																	<td>
-																		<div class="price-at-total-quantity was-converted">
-																			<small class="currency-code">INR</small>
-																			<span> </span>
-																			<span class="amount">117.38992</span>
-																			<span class="conversion-asterisk">*</span>
-																			<noscript />
-																		</div>
-																	</td>
-																</tr>
-																<tr>
-																	<td>
-																		<span>Onlinecomponents.com</span>
-																		<span class="packaging">
-																			<span> (</span>
-																			<span>Bulk</span>
-																			<span>)</span>
-																		</span>
-																	</td>
-																	<td>
-																		<div class="in-stock-quantity">100</div>
-																	</td>
-																	<td>
-																		<div class="price-at-total-quantity was-converted">
-																			<small class="currency-code">INR</small>
-																			<span> </span>
-																			<span class="amount">59.01570</span>
-																			<span class="conversion-asterisk">*</span>
-																			<noscript />
-																		</div>
-																	</td>
-																</tr>
-																<tr>
-																	<td>
-																		<span>Master Electronics</span>
-																		<span class="packaging" />
-																	</td>
-																	<td>
-																		<div class="in-stock-quantity">88</div>
-																	</td>
-																	<td>
-																		<div class="price-at-total-quantity was-converted">
-																			<small class="currency-code">INR</small>
-																			<span> </span>
-																			<span class="amount">59.01570</span>
-																			<span class="conversion-asterisk">*</span>
-																			<noscript />
-																		</div>
-																	</td>
-																</tr>
-																<tr>
-																	<td>
-																		<span>Farnell</span>
-																		<span class="packaging">
-																			<span> (</span>
-																			<span>Cut Tape</span>
-																			<span>)</span>
-																		</span>
-																	</td>
-																	<td>
-																		<div class="in-stock-quantity">227</div>
-																	</td>
-																	<td>
-																		<div class="price-at-total-quantity was-converted">
-																			<small class="currency-code">INR</small>
-																			<span> </span>
-																			<span class="amount">162.17846</span>
-																			<span class="conversion-asterisk">*</span>
-																			<noscript />
-																		</div>
-																	</td>
-																</tr>
-																<tr>
-																	<td>
-																		<span>Newark</span>
-																		<span class="packaging">
-																			<span> (</span>
-																			<span>Cut Tape</span>
-																			<span>)</span>
-																		</span>
-																	</td>
-																	<td>
-																		<div class="in-stock-quantity">227</div>
-																	</td>
-																	<td>
-																		<div class="price-at-total-quantity was-converted">
-																			<small class="currency-code">INR</small>
-																			<span> </span>
-																			<span class="amount">60.23450</span>
-																			<span class="conversion-asterisk">*</span>
-																			<noscript />
-																		</div>
-																	</td>
-																</tr>
-																<tr>
-																	<td>
-																		<span>element14 APAC</span>
-																		<span class="packaging" />
-																	</td>
-																	<td>
-																		<div class="in-stock-quantity">227</div>
-																	</td>
-																	<td>
-																		<div class="price-at-total-quantity was-converted">
-																			<small class="currency-code">INR</small>
-																			<span> </span>
-																			<span class="amount">139.50811</span>
-																			<span class="conversion-asterisk">*</span>
-																			<noscript />
-																		</div>
-																	</td>
-																</tr>
-																<tr>
-																	<td>
-																		<span>Quest</span>
-																		<span class="packaging" />
-																	</td>
-																	<td>
-																		<div class="in-stock-quantity">87</div>
-																	</td>
-																	<td>
-																		<div class="price-at-total-quantity was-converted">
-																			<small class="currency-code">INR</small>
-																			<span> </span>
-																			<span class="amount">128.29500</span>
-																			<span class="conversion-asterisk">*</span>
-																			<noscript />
-																		</div>
-																	</td>
-																</tr>
-															</tbody>
-														</table>
-													</div>
-													<div>
-														<p>Out-of-stock or insufficient stock:</p>
-														<table>
-															<thead>
-																<tr>
-																	<th>Distributor</th>
-																	<th>Stock</th>
-																	<th>Price</th>
-																</tr>
-															</thead>
-															<tbody>
-																<tr>
-																	<td>
-																		<span>Allied Electronics</span>
-																		<span class="packaging">
-																			<span> (</span>
-																			<span>Bulk</span>
-																			<span>)</span>
-																		</span>
-																	</td>
-																	<td>
-																		<div class="in-stock-quantity has-stock-problem">
-																			0
-																		</div>
-																	</td>
-																	<td>
-																		<div class="price-at-total-quantity was-converted">
-																			<small class="currency-code">INR</small>
-																			<span> </span>
-																			<span class="amount">83.39175</span>
-																			<span class="conversion-asterisk">*</span>
-																			<noscript />
-																		</div>
-																	</td>
-																</tr>
-															</tbody>
-														</table>
-													</div>
-													<p class="distributors-with-pricing-at-higher-quantity">
-														<span>14</span>
-														<span> distributors with pricing at qty &gt; </span>
-														<span>1</span>
-													</p>
-												</div>
-											</div>
-										)}
-									</div>
-								</div>
-								<noscript />
-								<ul class="empty" />
-							</div>
+					{this.state.data[i]['hit'] == undefined || this.state.data[i]['hit'].length == 0 ? (
+						<td className="matched-parts no-matches-found">
+							<div>No matches found</div>
+							<a href="#" className="create-custom-lineitem">
+								Create custom row
+							</a>
 						</td>
-					) : i == 1 ? (
+					) : this.state.data[i]['hit'].length > 1 ? (
 						<td class="matched-parts availability-good other-parts-is-open">
 							<div>
 								<div>
@@ -624,8 +448,10 @@ class App extends Component {
 										target="_blank"
 										class="selected-part"
 									>
-										<div class="manufacturer-name">Texas Instruments</div>
-										<div class="mpn">INA114AP</div>
+										<div class="manufacturer-name">
+											{this.state.data[i]['hit'][0]._source.manufacturer}
+										</div>
+										<div class="mpn"> </div>
 									</a>
 									<noscript />
 								</div>
@@ -646,7 +472,7 @@ class App extends Component {
 												<div>
 													<div class="manufacturer-name-mpn-description">
 														<div class="manufacturer-name">Texas Instruments</div>
-														<div class="mpn">INA114AP</div>
+														<div class="mpn"> </div>
 														<div class="description">
 															SP Amp INSTR Amp Single 18V 8-Pin PDIP
 														</div>
@@ -668,43 +494,14 @@ class App extends Component {
 													</div>
 												</div>
 											</li>
-											<li class="part-option availability-warning">
-												<div>
-													<div class="manufacturer-name-mpn-description">
-														<div class="manufacturer-name">Burr Brown</div>
-														<div class="mpn">INA114AP</div>
-														<div class="description">
-															IC, INSTRUMENT AMP, 1MHZ, 110DB, DIP-8
-														</div>
-													</div>
-													<div class="details-image">
-														<a
-															href="https://octopart.com/ina114ap-burr+brown-11758520"
-															target="_blank"
-															class="details"
-														>
-															<span>Details</span>
-														</a>
-														<div class="image">
-															<img
-																src="https://sigma.octopart.com/37126057/image/Burr-Brown-INA114AP.jpg"
-																alt="Image for INA114AP"
-															/>
-														</div>
-													</div>
-												</div>
-											</li>
 										</ul>
 									</div>
 								)}
 							</div>
 						</td>
 					) : (
-						<td className="matched-parts no-matches-found">
-							<div>No matches found</div>
-							<a href="#" className="create-custom-lineitem">
-								Create custom row
-							</a>
+						<td className="matched-parts ">
+							<div class="manufacturer-name">{this.state.data[i][this.state.title[2]]}</div>
 						</td>
 					)}
 					<td className="lineitem-details">
@@ -712,7 +509,11 @@ class App extends Component {
 							<tbody>
 								<tr>
 									<td className="lineitem-details-column lineitem-details-column-schematicReference">
-										<div>
+										<div
+											style={{
+												overflow: 'hidden'
+											}}
+										>
 											<a
 												href="#"
 												onClick={() =>
@@ -726,7 +527,13 @@ class App extends Component {
 											>
 												Edit
 											</a>
-											<div style={{ borderWidth: 1, borderColor: this.getBorder(3) }}>
+											<div
+												style={{
+													overflow: 'hidden',
+													borderWidth: 1,
+													borderColor: this.getBorder(3)
+												}}
+											>
 												{this.getVal(
 													this.state.data[i][this.state.title[2]],
 													this.state.data[i][this.state.propertyName],
@@ -739,7 +546,11 @@ class App extends Component {
 										</div>
 									</td>
 									<td className="lineitem-details-column lineitem-details-column-internalPartNumber">
-										<div>
+										<div
+											style={{
+												overflow: 'hidden'
+											}}
+										>
 											<a
 												href="#"
 												className="edit-link"
@@ -753,7 +564,13 @@ class App extends Component {
 											>
 												Edit
 											</a>
-											<div style={{ borderWidth: 1, borderColor: this.getBorder(4) }}>
+											<div
+												style={{
+													overflow: 'hidden',
+													borderWidth: 1,
+													borderColor: this.getBorder(4)
+												}}
+											>
 												{this.getVal(
 													this.state.data[i][this.state.title[3]],
 													this.state.data[i][this.state.propertyName],
@@ -766,7 +583,11 @@ class App extends Component {
 										</div>
 									</td>
 									<td className="lineitem-details-column lineitem-details-column-description">
-										<div>
+										<div
+											style={{
+												overflow: 'hidden'
+											}}
+										>
 											<a
 												href="#"
 												className="edit-link"
@@ -780,7 +601,13 @@ class App extends Component {
 											>
 												Edit
 											</a>
-											<div style={{ borderWidth: 1, borderColor: this.getBorder(5) }}>
+											<div
+												style={{
+													overflow: 'hidden',
+													borderWidth: 1,
+													borderColor: this.getBorder(5)
+												}}
+											>
 												{this.getVal(
 													this.state.data[i][this.state.title[4]],
 													this.state.data[i][this.state.propertyName],
@@ -1160,7 +987,37 @@ class App extends Component {
 										<td />
 										<td colspan="2" className="add-line-item">
 											<div>
-												<input type="text" placeholder="Add MPN or SKU" value="" />
+												{
+													<Autosuggest
+														theme={{ suggestionHighlighted: true }}
+														onSuggestionHighlighted={this.onSuggestionHighlighted}
+														style={{ position: 'absolute', marginTop: 5 }}
+														suggestions={this.state.suggestions}
+														onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
+														onSuggestionsClearRequested={this.onSuggestionsClearRequested}
+														getSuggestionValue={this.getSuggestionValue}
+														renderSuggestionsContainer={renderSuggestionsContainer}
+														renderSuggestion={this.renderSuggestion}
+														onSuggestionSelected={this.onSuggestionSelected.bind(this, -1)}
+														inputProps={{
+															style: { borderWidth: 1, borderColor: this.getBorder(1) },
+
+															placeholder: 'Add NPM or SKU',
+															onKeyPress: (ev) => {
+																console.log(`Pressed keyCode ${ev.key}`);
+																if (ev.key === 'Enter') {
+																	this.getInfo(-1, this.state.newSku);
+
+																	ev.preventDefault();
+																}
+															},
+															value: this.state.newSku,
+															onChange: (event, { newValue }) => {
+																this.setState({ newSku: newValue });
+															}
+														}}
+													/>
+												}
 												<a
 													href="#"
 													className="pastebox-trigger"
