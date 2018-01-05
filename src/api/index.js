@@ -1,4 +1,4 @@
-const getData = function(sku_num) {
+export const getData = function(sku_num) {
 	console.log('sss=', sku_num);
 	return fetch('https://scalr.api.appbase.io/shopelect-v8/shopelect-v8/_search', {
 		method: 'POST',
@@ -24,4 +24,28 @@ const getData = function(sku_num) {
 			console.error('api error: ', error);
 		});
 };
-export default getData;
+export const getPrefix = function(sku_num) {
+	console.log('SKYU=', sku_num);
+	return fetch('https://scalr.api.appbase.io/shopelect-v8/_search', {
+		method: 'POST',
+		headers: {
+			Authorization: 'Basic dkpTM3VsQmRKOmNmNjA3MmJhLTM3MWQtNDFkOC04Njg0LTU1NGY1ZmJjZTU3ZQ==',
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({
+			query: {
+				match_phrase_prefix: {
+					company_sku: sku_num
+				}
+			}
+		})
+	})
+		.then((response) => response.json())
+		.then((response) => {
+			console.log('Resp', response);
+			return response.hits.hits.slice(0, 10).map((hit, index) => hit._source.company_sku);
+		})
+		.catch((error) => {
+			console.error('api error: ', error);
+		});
+};

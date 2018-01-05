@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import FontAwesome from 'react-fontawesome';
-import getData from './api';
+import { getData, getPrefix } from './api';
 import { Card, Icon, Image } from 'semantic-ui-react';
 import 'bootstrap/dist/css/bootstrap.css';
 
@@ -8,7 +8,26 @@ import ToolTip from './components/ToolTip.js';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import RaisedButton from 'material-ui/RaisedButton';
+import Autosuggest from 'react-autosuggest';
 
+const renderSuggestionsContainer = ({ containerProps, children, query }) => {
+	return (
+		<div
+			{...containerProps}
+			style={{
+				position: 'absolute',
+				borderStyle: 'solid',
+				width: '90%',
+				zIndex: 99,
+				borderColor: 'black',
+				backgroundColor: 'lightgrey'
+			}}
+		>
+			{children}
+		</div>
+	);
+};
+//
 class App extends Component {
 	setState(prop) {
 		super.setState(prop, this.saveBom);
@@ -82,7 +101,8 @@ class App extends Component {
 			propertyName: bomArray[0][0],
 			totalCount: _totalCount,
 			editCaption: 'Schematic Reference',
-			showEdit: false
+			showEdit: false,
+			suggestions: []
 		};
 	}
 
@@ -182,7 +202,7 @@ class App extends Component {
 		const name = target.name;
 		var _data = this.state.data.slice(0);
 		var _prevVal = _data[index][name];
-
+		if (name == this.state.title[0]) this.onSuggestionsFetchRequested(value);
 		if (name == this.state.title[1] && parseInt(value) < 1) {
 		} else {
 			var _total = this.state.totalCount;
@@ -197,6 +217,28 @@ class App extends Component {
 			this.setState({ data: _data, totalCount: _total });
 		}
 	}
+
+	getSuggestionValue = (suggestion) => suggestion;
+
+	renderSuggestion = (suggestion) => <div>{suggestion}</div>;
+	onSuggestionsFetchRequested = async ({ value }) => {
+		if (value == undefined) return;
+		let _suggestion = await getPrefix(value);
+		console.log('_sugges', _suggestion);
+		this.setState({
+			suggestions: _suggestion
+		});
+	};
+
+	// Autosuggest will call this function every time you need to clear suggestions.
+	onSuggestionsClearRequested = () => {
+		this.setState({
+			suggestions: []
+		});
+	};
+	onSuggestionSelected = (event, { suggestion, suggestionValue, suggestionIndex, sectionIndex, method }) => {
+		//suggestionValue
+	};
 	render() {
 		var Popup = (
 			<ToolTip
@@ -232,16 +274,25 @@ class App extends Component {
 					</td>
 					<td className="query">
 						<div>
-							<input
-								type="text"
-								style={{ borderWidth: 1, borderColor: this.getBorder(1) }}
-								value={this.getVal(
-									this.state.data[i][this.state.title[0]],
-									this.state.data[i][this.state.propertyName],
-									1
-								)}
-								name={this.state.title[0]}
-								onChange={this.handleInputChange.bind(this, i)}
+							<Autosuggest
+								style={{ position: 'absolute', marginTop: 5 }}
+								suggestions={this.state.suggestions}
+								onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
+								onSuggestionsClearRequested={this.onSuggestionsClearRequested}
+								getSuggestionValue={this.getSuggestionValue}
+								renderSuggestionsContainer={renderSuggestionsContainer}
+								renderSuggestion={this.renderSuggestion}
+								onSuggestionSelected={this.onSuggestionSelected}
+								inputProps={{
+									style: { borderWidth: 1, borderColor: this.getBorder(1) },
+									value: this.getVal(
+										this.state.data[i][this.state.title[0]],
+										this.state.data[i][this.state.propertyName],
+										1
+									),
+									name: this.state.title[0],
+									onChange: this.handleInputChange.bind(this, i)
+								}}
 							/>
 						</div>
 					</td>
