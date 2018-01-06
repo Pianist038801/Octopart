@@ -55,7 +55,6 @@ class App extends Component {
 			bomArray = boms[bomID].data;
 			_totalCount = boms[bomID].totalCount;
 			_done = true;
-			this.getTotalScore();
 		} else {
 			bomArray = props.location.state.data;
 		}
@@ -79,8 +78,6 @@ class App extends Component {
 				data: props.location.state.data,
 				date: new Date().toISOString().slice(0, 10)
 			});
-
-			//localStorage.setItem('boms', JSON.stringify(boms));
 		}
 
 		this.getDataFromServer(data);
@@ -140,8 +137,6 @@ class App extends Component {
 			// 	console.log(data[i]['part no']);
 			skus[i] = await getData(data[i]['part no']);
 		}
-		console.log('Dat=', data);
-
 		this.setState({ data: data, skus: skus });
 		this.getTotalScore.bind(this);
 	}
@@ -152,7 +147,6 @@ class App extends Component {
 
 	done = () => {
 		//Format Datas
-		console.log('UHAHA');
 		var _data = this.state.data.slice(0);
 		var _total = 0;
 		for (var i = 0; i < this.state.data.length; i++) {
@@ -161,9 +155,11 @@ class App extends Component {
 			}
 			_total += parseInt(this.state.data[i][this.state.title[1]]);
 		}
-		this.getTotalScore();
 		this.setState({ data: _data, open: false, done: true, totalCount: _total });
 		this.getTotalScore.bind(this);
+		for (var i = 0; i < this.state.data.length; i++) {
+			this.getInfo(i, this.state.data[i][this.state.title[0]]);
+		}
 	};
 
 	reset = () => {
@@ -322,11 +318,7 @@ class App extends Component {
 	addExtra = (sku, count) => {};
 	onSuggestionSelected = (index, event, { suggestion, suggestionValue, suggestionIndex, sectionIndex, method }) => {
 		event.preventDefault();
-		//var _data = this.state.data.splice(0);
-
 		this.getInfo(index, suggestionValue);
-		//this.setState({ data: _data });
-		//Fix it.
 	};
 	onSuggestionHighlighted = (v) => {
 		this.setState({ highlighted: v.suggestion });
@@ -362,15 +354,15 @@ class App extends Component {
 							//set hit to data
 							let _data = this.state.data.splice(0);
 
-							_data[i][this.state.title[2]] =
-								_data[i]['hit'][j]._source.manufacturer + ' ' + _data[i]['hit'][j]._source.company_sku;
+							_data[i][this.state.title[2]] = _data[i]['hit'][j]._source.manufacturer;
+							_data[i][this.state.title[0]] = _data[i]['hit'][j]._source.company_sku;
 							_data[i][this.state.title[3]] = _data[i]['hit'][j]._source.price;
 							_data[i][this.state.title[4]] = _data[i]['hit'][j]._source.description;
 
 							let _total = this.state.total;
 							_total +=
 								parseInt(_data[i]['hit'][j]._source.price) * parseInt(_data[i][this.state.title[1]]);
-							_data[i]['hit'] = [];
+							_data[i]['hit'] = [ _data[i]['hit'][j] ];
 							this.setState({ data: _data, showMatchList: false, total: _total });
 						}}
 					>
@@ -385,6 +377,7 @@ class App extends Component {
 									href="https://octopart.com/ina114ap-texas+instruments-414192"
 									target="_blank"
 									class="details"
+									style={{ position: 'relative', textTransform: 'inherit' }}
 								>
 									<span>Details</span>
 								</a>
@@ -480,92 +473,97 @@ class App extends Component {
 							/>
 						</div>
 					</td>
-					{this.state.data[i]['hit'] == undefined || this.state.data[i]['hit'].length == 0 ? (
-						<td className="matched-parts no-matches-found">
-							<div>No matches found</div>
-							<a href="#" className="create-custom-lineitem">
-								Create custom row
-							</a>
-						</td>
-					) : this.state.data[i]['hit'].length > 1 ? (
-						<td class="matched-parts availability-good other-parts-is-open">
-							<div>
-								<div>
-									<a
-										href="https://octopart.com/ina114ap-texas+instruments-414192"
-										target="_blank"
-										class="selected-part"
-									>
-										<div class="manufacturer-name">
-											{this.state.data[i]['hit'][0]._source.manufacturer}
-										</div>
-										<div class="mpn"> </div>
-									</a>
-									<noscript />
-								</div>
-								<a
-									href="#"
-									class="caution"
-									onClick={() => {
-										this.setState({ showMatchList: !this.state.showMatchList });
-									}}
-								>
-									<img alt="Multiple matches found" src="/assets/caution.png" /> {' '}
-								</a>
-								{this.state.showMatchList && (
-									<div class="all-parts has-caution">
-										<h4>Multiple matches found</h4>
-										<ul>{candidates}</ul>
-									</div>
-								)}
-							</div>
-						</td>
-					) : (
-						<td className="matched-parts ">
-							<div class="manufacturer-name">{this.state.data[i][this.state.title[2]]}</div>
-						</td>
-					)}
-					<td className="lineitem-details">
+
+					<td className="matched-parts lineitem-details">
 						<table>
 							<tbody>
-								<tr>
-									<td className="lineitem-details-column lineitem-details-column-schematicReference">
-										<div
-											style={{
-												overflow: 'hidden'
-											}}
-										>
-											<a
-												href="#"
-												onClick={() =>
-													this.setState({
-														editIndex: i,
-														editField: this.state.title[2],
-														editShow: true,
-														editCaption: 'Schemaic Reference'
-													})}
-												className="edit-link"
-											>
-												Edit
-											</a>
+								<tr style={{ marginLeft: 20 }}>
+									{!this.state.done ? (
+										<td className="lineitem-details-column lineitem-details-column-schematicReference">
 											<div
 												style={{
-													overflow: 'hidden',
-													borderWidth: 1,
-													borderColor: this.getBorder(3)
+													overflow: 'hidden'
 												}}
 											>
-												{this.getVal(
-													this.state.data[i][this.state.title[2]],
-													this.state.data[i][this.state.propertyName],
-													3
+												<a
+													href="#"
+													onClick={() =>
+														this.setState({
+															editIndex: i,
+															editField: this.state.title[2],
+															editShow: true,
+															editCaption: 'Schemaic Reference'
+														})}
+													className="edit-link"
+												>
+													  Edit
+												</a>
+												  <div
+													style={{
+														overflow: 'hidden',
+														borderWidth: 1,
+														borderColor: this.getBorder(3)
+													}}
+												>
+													{this.getVal(
+														this.state.data[i][this.state.title[2]],
+														this.state.data[i][this.state.propertyName],
+														3
+													)}
+												</div>
+												   <a href="#" className="more-link">
+													 More...
+												</a>
+											</div>
+										</td>
+									) : this.state.data[i]['hit'] == undefined ||
+									this.state.data[i]['hit'].length == 0 ? (
+										<td className="lineitem-details-column lineitem-details-column-schematicReference">
+											<div>No matches found</div>
+											<a href="#" className="create-custom-lineitem">
+												Create custom row
+											</a>
+										</td>
+									) : this.state.data[i]['hit'].length > 1 ? (
+										<td class="lineitem-details-column lineitem-details-column-schematicReference">
+											<div>
+												<div>
+													<a
+														href="https://octopart.com/ina114ap-texas+instruments-414192"
+														target="_blank"
+														class="selected-part"
+													>
+														<div class="manufacturer-name">
+															{this.state.data[i]['hit'][0]._source.manufacturer}
+														</div>
+														<div class="mpn"> </div>
+													</a>
+													<noscript />
+												</div>
+												<a
+													href="#"
+													class="caution"
+													onClick={() => {
+														this.setState({ showMatchList: !this.state.showMatchList });
+													}}
+												>
+													<img alt="Multiple matches found" src="/assets/caution.png" /> {' '}
+												</a>
+												{this.state.showMatchList && (
+													<div class="all-parts has-caution" style={{ padding: 0 }}>
+														<h4>Multiple matches found</h4>
+														<ul>{candidates}</ul>
+													</div>
 												)}
 											</div>
-											<a href="#" className="more-link">
-												More...
-											</a>
-										</div>
-									</td>
+										</td>
+									) : (
+										<td className="lineitem-details-column lineitem-details-column-schematicReference ">
+											<div class="manufacturer-name">
+												{this.state.data[i][this.state.title[2]]}
+											</div>
+										</td>
+									)}
 									<td className="lineitem-details-column lineitem-details-column-internalPartNumber">
 										<div
 											style={{
@@ -804,9 +802,6 @@ class App extends Component {
 											<th className="item-and-quantity" colspan="2">
 												<div>Part Number &amp; Qty</div>
 											</th>
-											<th className="matched-parts">
-												<div>Matched Parts</div>
-											</th>
 											<th className="lineitem-details-heading-top">
 												<div>
 													<div className="heading">Line Item Details</div>
@@ -892,9 +887,7 @@ class App extends Component {
 													<div>Qty</div>
 												)}
 											</th>
-											<th className="manufacturer-mpn">
-												<div>Schematic Reference</div>
-											</th>
+
 											<th className="lineitem-details-heading-bottom">
 												<div>
 													<table>
