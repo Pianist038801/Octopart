@@ -204,9 +204,16 @@ class App extends Component {
 		var v = this.state.data.slice(0);
 		v.splice(ind, 1);
 		let _totalCount = this.state.totalCount - parseInt(this.state.data[ind][this.state.title[1]]);
-		let _total =
-			this.state.total -
-			parseInt(this.state.data[ind][this.state.title[1]]) * parseInt(this.state.data[ind][this.state.title[3]]);
+		let _total;
+		if (
+			!isNaN(this.state.data[ind][this.state.title[3]]) &&
+			this.state.data[ind][this.state.title[3]] != '' &&
+			this.state.data[ind][this.state.title[3]] != undefined
+		)
+			_total =
+				this.state.total -
+				parseInt(this.state.data[ind][this.state.title[1]]) *
+					parseInt(this.state.data[ind][this.state.title[3]]);
 		this.setState({ data: v, totalCount: _totalCount, total: _total });
 		//this.getTotalScore();
 	};
@@ -236,7 +243,11 @@ class App extends Component {
 		let total = 0;
 		for (var i = 0; i < this.state.data.length; i++) {
 			console.log('Val', this.state.data[i]);
-			if (this.state.data[i][this.state.title[3]] != '') {
+			if (
+				!isNaN(this.state.data[i][this.state.title[3]]) &&
+				this.state.data[i][this.state.title[3]] != undefined &&
+				this.state.data[i][this.state.title[3]] != ''
+			) {
 				total +=
 					parseInt(this.state.data[i][this.state.title[3]]) *
 					parseInt(this.state.data[i][this.state.title[1]]);
@@ -360,8 +371,14 @@ class App extends Component {
 							_data[i][this.state.title[4]] = _data[i]['hit'][j]._source.description;
 
 							let _total = this.state.total;
-							_total +=
-								parseInt(_data[i]['hit'][j]._source.price) * parseInt(_data[i][this.state.title[1]]);
+							if (
+								!isNaN(_data[i]['hit'][j]._source.price) &&
+								_data[i]['hit'][j]._source.price != undefined &&
+								_data[i]['hit'][j]._source.price != ''
+							)
+								_total +=
+									parseInt(_data[i]['hit'][j]._source.price) *
+									parseInt(_data[i][this.state.title[1]]);
 							_data[i]['hit'] = [ _data[i]['hit'][j] ];
 							this.setState({ data: _data, showMatchList: false, total: _total });
 						}}
@@ -676,12 +693,15 @@ class App extends Component {
 					</td>
 					<td className="unit-price empty">
 						<div>
-							{this.state.data[i][this.state.title[3]] != '' && this.state.data[i][this.state.title[3]]}
+							{!isNaN(this.state.data[i][this.state.title[3]]) &&
+								this.state.data[i][this.state.title[3]] != '' &&
+								this.state.data[i][this.state.title[3]]}
 						</div>
 					</td>
 					<td className="line-total empty">
 						<div>
-							{this.state.data[i][this.state.title[3]] != '' &&
+							{!isNaN(this.state.data[i][this.state.title[3]]) &&
+								this.state.data[i][this.state.title[3]] != '' &&
 								parseInt(this.state.data[i][this.state.title[3]]) *
 									parseInt(this.state.data[i][this.state.title[1]])}
 						</div>
