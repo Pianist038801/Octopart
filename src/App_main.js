@@ -83,6 +83,11 @@ class App extends Component {
 		this.getDataFromServer(data);
 		console.log('FieldArray=', bomArray[0]);
 		this.state = {
+			showLine: true,
+			showPreferred: true,
+			showShopping: true,
+			showNotes: true,
+			showToggle: false,
 			showStockList: false,
 			showMatchList: false,
 			caption: boms[bomID].title,
@@ -118,7 +123,7 @@ class App extends Component {
 		bomTemp[this.state.bomID].title = this.state.caption;
 		bomTemp[this.state.bomID].totalCount = this.state.totalCount;
 		bomTemp[this.state.bomID].date = new Date().toISOString().slice(0, 10);
-		var _boms = [ this.state.title ].concat(this.state.data);
+		var _boms = [this.state.title].concat(this.state.data);
 
 		bomTemp[this.state.bomID].data = _boms;
 		localStorage.setItem('boms', JSON.stringify(bomTemp));
@@ -213,7 +218,7 @@ class App extends Component {
 			_total =
 				this.state.total -
 				parseInt(this.state.data[ind][this.state.title[1]]) *
-					parseInt(this.state.data[ind][this.state.title[3]]);
+				parseInt(this.state.data[ind][this.state.title[3]]);
 		this.setState({ data: v, totalCount: _totalCount, total: _total });
 		//this.getTotalScore();
 	};
@@ -254,7 +259,7 @@ class App extends Component {
 				console.log(
 					'Val',
 					parseInt(this.state.data[i][this.state.title[3]]) *
-						parseInt(this.state.data[i][this.state.title[1]])
+					parseInt(this.state.data[i][this.state.title[1]])
 				);
 			}
 		}
@@ -266,8 +271,8 @@ class App extends Component {
 		suggestion != this.state.highlighted ? (
 			<div>{suggestion}</div>
 		) : (
-			<div style={{ backgroundColor: 'grey' }}>{suggestion}</div>
-		);
+				<div style={{ backgroundColor: 'grey' }}>{suggestion}</div>
+			);
 	onSuggestionsFetchRequested = async ({ value }) => {
 		if (value == undefined) return;
 		let _suggestion = await getPrefix(value);
@@ -326,7 +331,7 @@ class App extends Component {
 		this.setState({ data: data });
 		this.getTotalScore();
 	};
-	addExtra = (sku, count) => {};
+	addExtra = (sku, count) => { };
 	onSuggestionSelected = (index, event, { suggestion, suggestionValue, suggestionIndex, sectionIndex, method }) => {
 		event.preventDefault();
 		this.getInfo(index, suggestionValue);
@@ -379,7 +384,7 @@ class App extends Component {
 								_total +=
 									parseInt(_data[i]['hit'][j]._source.price) *
 									parseInt(_data[i][this.state.title[1]]);
-							_data[i]['hit'] = [ _data[i]['hit'][j] ];
+							_data[i]['hit'] = [_data[i]['hit'][j]];
 							this.setState({ data: _data, showMatchList: false, total: _total });
 						}}
 					>
@@ -443,7 +448,7 @@ class App extends Component {
 								onSuggestionSelected={this.onSuggestionSelected.bind(this, i)}
 								inputProps={{
 									style: { borderWidth: 1, borderColor: this.getBorder(1) },
-									onSubmitEditing: () => {},
+									onSubmitEditing: () => { },
 									onKeyPress: (ev) => {
 										console.log(`Pressed keyCode ${ev.key}`);
 										if (ev.key === 'Enter') {
@@ -491,7 +496,7 @@ class App extends Component {
 						</div>
 					</td>
 
-					<td className="matched-parts lineitem-details">
+					{this.state.showLine && <td className="matched-parts lineitem-details">
 						<table>
 							<tbody>
 								<tr style={{ marginLeft: 20 }}>
@@ -513,9 +518,9 @@ class App extends Component {
 														})}
 													className="edit-link"
 												>
-													  Edit
+													Edit
 												</a>
-												  <div
+												<div
 													style={{
 														overflow: 'hidden',
 														borderWidth: 1,
@@ -528,59 +533,59 @@ class App extends Component {
 														3
 													)}
 												</div>
-												   <a href="#" className="more-link">
-													 More...
+												<a href="#" className="more-link">
+													More...
 												</a>
 											</div>
 										</td>
 									) : this.state.data[i]['hit'] == undefined ||
-									this.state.data[i]['hit'].length == 0 ? (
-										<td className="lineitem-details-column lineitem-details-column-schematicReference">
-											<div>No matches found</div>
-											<a href="#" className="create-custom-lineitem">
-												Create custom row
-											</a>
-										</td>
-									) : this.state.data[i]['hit'].length > 1 ? (
-										<td class="lineitem-details-column lineitem-details-column-schematicReference">
-											<div>
-												<div>
-													<a
-														href="https://octopart.com/ina114ap-texas+instruments-414192"
-														target="_blank"
-														class="selected-part"
-													>
-														<div class="manufacturer-name">
-															{this.state.data[i]['hit'][0]._source.manufacturer}
-														</div>
-														<div class="mpn"> </div>
+										this.state.data[i]['hit'].length == 0 ? (
+												<td  className="lineitem-details-column lineitem-details-column-schematicReference">
+													<div style={{ paddingLeft: '20px' }}>No matches found</div>
+													<a style={{ paddingLeft: '20px' }} href="#" className="create-custom-lineitem">
+														Create custom row
 													</a>
-													<noscript />
-												</div>
-												<a
-													href="#"
-													class="caution"
-													onClick={() => {
-														this.setState({ showMatchList: !this.state.showMatchList });
-													}}
-												>
-													<img alt="Multiple matches found" src="/assets/caution.png" /> {' '}
-												</a>
-												{this.state.showMatchList && (
-													<div class="all-parts has-caution" style={{ padding: 0 }}>
-														<h4>Multiple matches found</h4>
-														<ul>{candidates}</ul>
+												</td>
+											) : this.state.data[i]['hit'].length > 1 ? (
+												<td   class="lineitem-details-column lineitem-details-column-schematicReference">
+													<div style={{ paddingLeft: '20px' }}>
+														<div>
+															<a
+																href="https://octopart.com/ina114ap-texas+instruments-414192"
+																target="_blank"
+																class="selected-part"
+															>
+																<div class="manufacturer-name">
+																	{this.state.data[i]['hit'][0]._source.manufacturer}
+																</div>
+																<div class="mpn"> </div>
+															</a>
+															<noscript />
+														</div>
+														<a
+															href="#"
+															class="caution"
+															onClick={() => {
+																this.setState({ showMatchList: !this.state.showMatchList });
+															}}
+														>
+															<img alt="Multiple matches found" src="/assets/caution.png" /> {' '}
+														</a>
+														{this.state.showMatchList && (
+															<div class="all-parts has-caution" style={{ padding: 0 }}>
+																<h4>Multiple matches found</h4>
+																<ul>{candidates}</ul>
+															</div>
+														)}
 													</div>
+												</td>
+											) : (
+													<td  className="lineitem-details-column lineitem-details-column-schematicReference ">
+														<div style={{ paddingLeft: '20px' }} class="manufacturer-name">
+															{this.state.data[i][this.state.title[2]]}
+														</div>
+													</td>
 												)}
-											</div>
-										</td>
-									) : (
-										<td className="lineitem-details-column lineitem-details-column-schematicReference ">
-											<div class="manufacturer-name">
-												{this.state.data[i][this.state.title[2]]}
-											</div>
-										</td>
-									)}
 									<td className="lineitem-details-column lineitem-details-column-internalPartNumber">
 										<div
 											style={{
@@ -658,8 +663,8 @@ class App extends Component {
 								</tr>
 							</tbody>
 						</table>
-					</td>
-					<td className="selected-distributors">
+					</td>}
+					{this.state.showPreferred && <td className="selected-distributors">
 						<table>
 							<tbody>
 								<tr>
@@ -687,44 +692,49 @@ class App extends Component {
 								</tr>
 							</tbody>
 						</table>
-					</td>
-					<td className="distributor-sku empty">
+					</td>}
+					{this.state.showShopping && <td className="distributor-sku empty">
 						<div>N/A</div>
-					</td>
-					<td className="unit-price empty">
-						<div>
-							{!isNaN(this.state.data[i][this.state.title[3]]) &&
-								this.state.data[i][this.state.title[3]] != '' &&
-								this.state.data[i][this.state.title[3]]}
-						</div>
-					</td>
-					<td className="line-total empty">
-						<div>
-							{!isNaN(this.state.data[i][this.state.title[3]]) &&
-								this.state.data[i][this.state.title[3]] != '' &&
-								parseInt(this.state.data[i][this.state.title[3]]) *
+					</td>}
+					{this.state.showShopping &&
+						<td className="unit-price empty">
+							<div>
+								{!isNaN(this.state.data[i][this.state.title[3]]) &&
+									this.state.data[i][this.state.title[3]] != '' &&
+									this.state.data[i][this.state.title[3]]}
+							</div>
+						</td>}
+					{this.state.showShopping &&
+						<td className="line-total empty">
+							<div>
+								{!isNaN(this.state.data[i][this.state.title[3]]) &&
+									this.state.data[i][this.state.title[3]] != '' &&
+									parseInt(this.state.data[i][this.state.title[3]]) *
 									parseInt(this.state.data[i][this.state.title[1]])}
-						</div>
-					</td>
-					<td className="batch-total empty">
-						<div>N/A</div>
-					</td>
-					<td className="notes">
-						<div>
-							<a href="#" className="edit-link">
-								Edit
+							</div>
+						</td>}
+					{this.state.showShopping &&
+						<td className="batch-total empty">
+							<div>N/A</div>
+						</td>
+					}
+					{this.state.showNotes &&
+						<td className="notes">
+							<div>
+								<a href="#" className="edit-link">
+									Edit
 							</a>
-							<div />
-							<a href="#" className="more-link">
-								More...
+								<div />
+								<a href="#" className="more-link">
+									More...
 							</a>
-						</div>
-					</td>
+							</div>
+						</td>}
 				</tr>
 			);
 		}
 		return (
-			<div className="body" style={{ paddingTop: 120 }}>
+			<div className="body" onClick={() => { console.log('BIG'); this.setState({ showToggle: false, showMatchList: false }) }} style={{ paddingTop: 120 }}>
 				<Dialog
 					modal={true}
 					open={this.state.open}
@@ -738,7 +748,7 @@ class App extends Component {
 				</Dialog>
 				<div className="page bom-tool show">
 					<div id="bombom">
-						<div className="bombom">
+						<div className="bombom"  >
 							<h1>
 								{!this.state.captionEdit ? (
 									<button
@@ -756,31 +766,31 @@ class App extends Component {
 										{this.state.caption}
 									</button>
 								) : (
-									<div>
-										<input
-											type="text"
-											value={this.state.caption1}
-											onChange={(val) => {
-												this.setState({ caption1: val.target.value });
-											}}
-											ref={(r) => (this.title = r)}
-											style={{ width: '200px', color: 'rgb(41,92,174)', fontSize: 30 }}
-										/>
-										<label
-											onClick={() =>
-												this.setState({ caption: this.state.caption1, captionEdit: false })}
-											style={{ marginLeft: 20, marginRight: 20, color: 'grey', fontSize: 10 }}
-										>
-											OK
+										<div>
+											<input
+												type="text"
+												value={this.state.caption1}
+												onChange={(val) => {
+													this.setState({ caption1: val.target.value });
+												}}
+												ref={(r) => (this.title = r)}
+												style={{ width: '200px', color: 'rgb(41,92,174)', fontSize: 30 }}
+											/>
+											<label
+												onClick={() =>
+													this.setState({ caption: this.state.caption1, captionEdit: false })}
+												style={{ marginLeft: 20, marginRight: 20, color: 'grey', fontSize: 10 }}
+											>
+												OK
 										</label>
-										<label
-											onClick={() => this.setState({ captionEdit: false })}
-											style={{ color: 'grey', fontSize: 10 }}
-										>
-											Cancel
+											<label
+												onClick={() => this.setState({ captionEdit: false })}
+												style={{ color: 'grey', fontSize: 10 }}
+											>
+												Cancel
 										</label>
-									</div>
-								)}
+										</div>
+									)}
 							</h1>
 							<div className="batch-size-pricing">
 								<div className="batch-size">
@@ -810,74 +820,77 @@ class App extends Component {
 							</div>
 							<div className="frozen-thead">
 								<table>
-									<thead className="bom-head">
+									<thead className="bom-head"  >
 										<tr className="top">
 											<th className="column-group-selector-heading" colspan="2">
 												<div>
-													<div className="column-group-selector">
-														<a href="#" className="opener" />
+													<div className="column-group-selector" onClick={(e) => { e.stopPropagation(); console.log('SMALL');  this.setState({ showToggle: true });   }}> 
+														<a href="#" class="opener"   >
+														<FontAwesome 
+															name='cog' 
+															style={{ width: '2px', height: '2px', textShadow: '0 1px 0 rgba(0, 0, 0, 0.1)' }}
+														/> 
+															<i class="fa fa-angle-down" size={2} aria-hidden="true"></i>
+														</a>
+														{
+															this.state.showToggle && 
+															<div class="selector">
+															<div class="label">Show these column groups:</div>
+															<ul>
+																	<li><label><input type="checkbox" checked={this.state.showLine} onChange={() => {this.setState({showLine: !this.state.showLine})}}/><span >Line Item Details</span></label></li>
+																<li><label><input type="checkbox"   checked={this.state.showPreferred} onChange={() => {this.setState({showPreferred: !this.state.showPreferred})}}/><span>Preferred Distributors</span></label></li>
+																<li><label><input type="checkbox"  checked={this.state.showShopping} onChange={() => {this.setState({showShopping: !this.state.showShopping})}}/><span>Shopping List</span></label></li>
+																<li><label><input type="checkbox"   checked={this.state.showNotes} onChange={() => {this.setState({showNotes: !this.state.showNotes})}}/><span>Notes</span></label></li>
+															</ul>
+														</div> }
 													</div>
 												</div>
 											</th>
 											<th className="item-and-quantity" colspan="2">
 												<div>Part Number &amp; Qty</div>
 											</th>
-											<th className="lineitem-details-heading-top">
-												<div>
-													<div className="heading">Line Item Details</div>
-													<a className="" href="#">
-														Hide
+											{this.state.showLine &&
+												<th className="lineitem-details-heading-top">
+													<div>
+														<div className="heading">Line Item Details</div>
+														<a className="" href="#" onClick={() => this.setState({ showLine: false })}>
+															Hide
 													</a>
-												</div>
-											</th>
-											<th className="selected-distributors-heading-top">
-												<div>
-													<div className="heading">Preferred Distributors</div>
-													<a className="" href="#">
-														Hide
+													</div>
+												</th>
+											}
+											{this.state.showPreferred &&
+												<th className="selected-distributors-heading-top">
+													<div>
+														<div className="heading">Preferred Distributors</div>
+														<a className="" href="#" onClick={() => this.setState({ showPreferred: false })}>
+															Hide
 													</a>
-													<a className="" href="#">
-														Edit
-													</a>
-												</div>
-											</th>
+													</div>
+												</th>
+											}
+											{this.state.showShopping && 
 											<th colspan="4" className="cart-pricing-select">
 												<div>
 													<div className="cart">
 														<div>Shopping List</div>
 													</div>
-													<label>Auto fill</label>
-													<div className="pricing-select">
-														<select>
-															<option selected="" value="lowest_overall">
-																Lowest Price (Overall)
-															</option>
-															<option value="lowest_preferred">
-																Lowest Price (Preferred)
-															</option>
-															<option value="2c3be9310496fffc">Digi-Key</option>
-															<option value="a5e060ea85e77627">Mouser</option>
-															<option value="d294179ef2900153">Newark</option>
-															<option value="custom" disabled="">
-																Custom
-															</option>
-														</select>
-														<i className="icon icon_arrow_down_small" />
-													</div>
-													<a className="" href="#">
+													 
+													<a className="" href="#" onClick={() => this.setState({ showShopping: false })}>
 														Hide
 													</a>
 												</div>
 											</th>
-											<th className="notes-heading">
+										}	
+											{this.state.showNotes && <th className="notes-heading">
 												<div>
 													<a className="heading" href="#">
 														Notes
 													</a>
 
-													<a href="#">Hide</a>
+													<a href="#" onClick={() => this.setState({ showNotes: false })}>Hide</a>
 												</div>
-											</th>
+											</th>}
 										</tr>
 										<tr className="bottom">
 											<th className="edit" colspan="2">
@@ -894,8 +907,8 @@ class App extends Component {
 														{Popup}
 													</div>
 												) : (
-													<div>Part Number</div>
-												)}
+														<div>Part Number</div>
+													)}
 											</th>
 											<th className="quantity">
 												{!this.state.done && this.state.id == 2 ? (
@@ -904,11 +917,11 @@ class App extends Component {
 														{Popup}
 													</div>
 												) : (
-													<div>Qty</div>
-												)}
+														<div>Qty</div>
+													)}
 											</th>
 
-											<th className="lineitem-details-heading-bottom">
+											{this.state.showLine && <th className="lineitem-details-heading-bottom">
 												<div>
 													<table>
 														<thead>
@@ -921,8 +934,8 @@ class App extends Component {
 																				{Popup}
 																			</div>
 																		) : (
-																			<div>Manufacturer/MPN</div>
-																		)}
+																				<div>Manufacturer/MPN</div>
+																			)}
 																	</div>
 																</th>
 																<th className="lineitem-details-column internal-part-number">
@@ -933,8 +946,8 @@ class App extends Component {
 																				{Popup}
 																			</div>
 																		) : (
-																			<div>Internal Part Number</div>
-																		)}
+																				<div>Internal Part Number</div>
+																			)}
 																	</div>
 																</th>
 																<th className="lineitem-details-column description">
@@ -945,15 +958,16 @@ class App extends Component {
 																				{Popup}
 																			</div>
 																		) : (
-																			<div>Description</div>
-																		)}
+																				<div>Description</div>
+																			)}
 																	</div>
 																</th>
 															</tr>
 														</thead>
 													</table>
 												</div>
-											</th>
+											</th>}
+											{this.state.showPreferred && 
 											<th className="selected-distributors-heading-bottom">
 												<div>
 													<table>
@@ -962,59 +976,52 @@ class App extends Component {
 																<th className="selected-distributor has-cart">
 																	<div>
 																		<div className="name">Digi-Key</div>
-																		<a href="#">
-																			<small>
-																				<i className="icon icon_cart" />
-																				<span>Buy Now</span>
-																			</small>
-																		</a>
+																		 
 																	</div>
 																</th>
 																<th className="selected-distributor has-cart">
 																	<div>
 																		<div className="name">Mouser</div>
-																		<a href="#">
-																			<small>
-																				<i className="icon icon_cart" />
-																				<span>Buy Now</span>
-																			</small>
-																		</a>
+																		 
 																	</div>
 																</th>
 																<th className="selected-distributor has-cart">
 																	<div>
 																		<div className="name">Newark</div>
-																		<a href="#">
-																			<small>
-																				<i className="icon icon_cart" />
-																				<span>Buy Now</span>
-																			</small>
-																		</a>
+																		 
 																	</div>
 																</th>
 															</tr>
 														</thead>
 													</table>
 												</div>
-											</th>
-											<th className="distributor-sku">
-												<div>
-													<a href="#">Distributor/SKU</a>
-												</div>
-											</th>
-											<th className="unit-price">
-												<div>
-													<a href="#">Unit Price</a>
-												</div>
-											</th>
+												</th>}
+											{this.state.showShopping &&
+												 <th className="distributor-sku">
+													<div>
+														<a href="#">Distributor/SKU</a>
+													</div>
+												</th>
+											}	
+											{this.state.showShopping &&
+												<th className="unit-price">
+													<div>
+														<a href="#">Unit Price</a>
+													</div>
+												</th>}
+												{this.state.showShopping &&
 											<th className="line-total">
 												<div>Line Total</div>
-											</th>
+											</th>}
+												{this.state.showShopping &&
 											<th className="batch-total">
 												<div>Batch Total</div>
 											</th>
-											<th className="notes-heading-bottom" />
+										}
+											{this.state.showNotes &&
+												<th className="notes-heading-bottom" />}
 										</tr>
+									
 									</thead>
 								</table>
 							</div>
