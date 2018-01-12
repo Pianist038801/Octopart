@@ -565,8 +565,8 @@ class App extends Component {
 														<a
 															href="#"
 															class="caution"
-															onClick={() => {
-																this.setState({ showMatchList: !this.state.showMatchList });
+															onClick={(e) => {e.stopPropagation();
+																this.setState({ showMatchList: true });
 															}}
 														>
 															<img alt="Multiple matches found" src="/assets/caution.png" /> {' '}
@@ -819,18 +819,18 @@ class App extends Component {
 								</div>
 							</div>
 							<div className="frozen-thead">
-								<table>
+								<table style={{width: "initial"}}>
 									<thead className="bom-head"  >
 										<tr className="top">
 											<th className="column-group-selector-heading" colspan="2">
 												<div>
 													<div className="column-group-selector" onClick={(e) => { e.stopPropagation(); console.log('SMALL');  this.setState({ showToggle: true });   }}> 
-														<a href="#" class="opener"   >
+														<a href="#" class="opener" >
 														<FontAwesome 
 															name='cog' 
-															style={{ width: '2px', height: '2px', textShadow: '0 1px 0 rgba(0, 0, 0, 0.1)' }}
+															style={{ fontSize: 20, position: "absolute", left: "5px", top: "5px", textShadow: '0 1px 0 rgba(0, 0, 0, 0.1)' }}
 														/> 
-															<i class="fa fa-angle-down" size={2} aria-hidden="true"></i>
+															<i class="fa fa-angle-down" style={{ position: "absolute", right: "2px", top: "-2px" }} size={2} aria-hidden="true"></i>
 														</a>
 														{
 															this.state.showToggle && 
